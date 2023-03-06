@@ -1,0 +1,82 @@
+<!--
+  ~ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  ~ SPDX-License-Identifier: MIT-0
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+  ~ software and associated documentation files (the "Software"), to deal in the Software
+  ~ without restriction, including without limitation the rights to use, copy, modify,
+  ~ merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+  ~ permit persons to whom the Software is furnished to do so.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+  ~ INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+  ~ PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+  ~ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  ~ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+  ~ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<resources>
+    <string name="app_name">Sidewalk Sample</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome !"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="otp">Enter the code you received by email</string>
+    <string name="login4real">Login For Real This Time</string>
+    <string name="login">Login</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="otp_hint">Six digits</string>
+    <string name="title_activity_login_with_amazon">LoginWithAmazonActivity</string>
+    <!--
+    This string is used for square devices and overridden by hello_world in
+    values-round/strings.xml for round devices.
+    -->
+    <string name="hello_world">Hello Square World!</string>
+
+    <string name="menu_settings">Settings</string>
+    <string name="login_with_amazon">Login with Amazon</string>
+    <string name="logout">Logout</string>
+    <string name="default_message">Welcome to Login with Amazon!\nIf this is your first time logging in, you will be asked to give permission for this application to access your profile data.</string>
+    <string name="login_button_content_description">"Button for authorization through Login with Amazon"</string>
+    <string name="return_to_app">Return to App</string>
+    <string name="device_information">%1$s     %2$s      %3$d</string>
+    <string name="account_settings">Account Settings</string>
+    <string name="menu">Menu</string>
+    <string name="device_scan">Scan</string>
+    <string name="deregister">Deregister</string>
+    <string name="status">Status: %s</string>
+    <string name="status_logged_in">Logged In</string>
+    <string name="status_logged_out">Logged Out</string>
+    <string name="signing_in">Signing In</string>
+    <string name="signing_out">Signing Out</string>
+    <string name="please_wait">Please wait &#8230;</string>
+    <string name="SignIn">Sign In</string>
+    <string name="SignOut">Sign Out</string>
+    <string name="deregister_alert_msg">Enter Device SidewalkID</string>
+    <string name="cancel">Cancel</string>
+    <string name="success">Success</string>
+    <string name="error">Error</string>
+    <string name="deregister_success_msg">De-registration for %s succeeded</string>
+    <string name="deregister_failed_msg">De-register failed, \nmessage= %1$s</string>
+    <string name="subscribe_msg_header">Subscribed message from %s</string>
+    <string name="register">Register</string>
+    <string name="write">Write</string>
+    <string name="connect_secure_channel">Connect secure channel</string>
+    <string name="registered_devices">Registered devices</string>
+    <string name="unregistered_devices">Unregistered devices</string>
+</resources>
