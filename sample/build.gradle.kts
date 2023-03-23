@@ -112,7 +112,7 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk15to18:1.72")
 
     // Sidewalk SDK
-    implementation("com.amazon.sidewalk:mobile-sdk:1.0.0")
+    implementation("com.amazon.sidewalk:mobile-sdk:1.1.0")
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.44")
