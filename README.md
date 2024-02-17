@@ -1,20 +1,24 @@
 # amazon-sidewalk-android-samples
 
-## Building the Sidewalk Sample App
-1. Open Sidewalk Sample App project with Android Studio.
+## Building the Amazon Sidewalk Sample App
+1. Open Amazon Sidewalk Sample App project with Android Studio.
 2. Follow the Register for Login with Amazon flow documented on [developer.amazon.com](https://developer.amazon.com/docs/login-with-amazon/register-android.html) to obtain an API Key for your bundle ID and security profile.
 3. Replace the content in `sample/src/main/assets/api_key.txt` with the API Key.
 4. Download the Login with Amazon SDK from [developer.amazon.com](https://developer.amazon.com/docs/apps-and-games/sdk-downloads.html)
-5. Unzip LoginWithAmazon_Android.zip and copy `login-with-amazon-sdk.jar` from `LoginWithAmazon-3.1.0/lib/` to `sample/libs/`
+5. Unzip LoginWithAmazon_Android.zip and copy `login-with-amazon-sdk.jar` from `LoginWithAmazon-{latest-version}/lib/` to `sample/libs/`
 6. Run the app on an Android device, the emulator shouldn't have bluetooth capabilities.
 
-## Testing with the Sidewalk Sample App
-1. The Sidewalk Sample App provides scanning, registration, deregistration, and secure connect capabilities.
-2. Click on Login to authenticate, use your Amazon test account. **NOTE:** The Amazon account is required to be linked with a Ring account for Sidewalk functionalities.
-3. Scanning is triggered automatically. This will only discover Sidewalk devices in registration mode
-4. Press the found device to establish a secure channel or start Sidewalk registration process.
-5. There is no visual indication of the registration progress. There will be a pop up with an error or success once the process completes.
-6. Logs may be viewed in the Device Console. When complete without errors, the console will say "Registration succeeded: $wirelessDeviceId".
+## Testing with the Amazon Sidewalk Sample App
+1. The Amazon Sidewalk Sample App provides scanning, registration, deregistration, and secure connect capabilities.
+2. Click on Menu -> Sign In to authenticate, use your Amazon test account.
+3. Scanning is triggered automatically. This will only discover Amazon Sidewalk devices in OOBE mode or registered under current logged-in account.
+	- For each device in the UNREGISTERED DEVICES section, it shows the device name, Sidewalk Manufacturing Serial Number (SMSN), and RSSI.
+	- For each device in the REGISTERED DEVICES section, it shows the device name, Sidewalk ID, and RSSI.
+4. Press a found device in the UNREGISTERED DEVICES section, and click register to go through the Amazon Sidewalk registration process.
+5. A spinner indicates the registration progress. There will be a pop up with an error or success once the process completes.
+6. Press a found device in any section, and click Secure Connect to initiate a secure connection. Upon success, this will take you to the secure connection page. You can also register with a secure connection (preferred if you already have one), which is showcased here.
+7. Menu -> Deregister allows you to deregister a device by inputting the device's SMSN.
+8. Logs may be viewed in the Device Console.
 
 ## Security
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
