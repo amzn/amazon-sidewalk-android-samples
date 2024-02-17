@@ -25,7 +25,7 @@
     android:layout_height="wrap_content">
 
     <EditText
-        android:id="@+id/sidewalk_id"
+        android:id="@+id/smsn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/edittext_drawable"

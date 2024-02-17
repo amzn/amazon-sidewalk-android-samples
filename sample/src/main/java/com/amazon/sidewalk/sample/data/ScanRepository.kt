@@ -20,12 +20,13 @@ package com.amazon.sidewalk.sample.data
 
 import com.amazon.sidewalk.Sidewalk
 import com.amazon.sidewalk.device.SidewalkDevice
-import com.amazon.sidewalk.result.RegisterResult
+import com.amazon.sidewalk.result.RegistrationDetail
 import com.amazon.sidewalk.result.SidewalkResult
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 
 class ScanRepository @Inject constructor(
     private val sidewalk: Sidewalk,
@@ -35,7 +36,9 @@ class ScanRepository @Inject constructor(
         return sidewalk.scan().flowOn(ioDispatcher)
     }
 
-    fun register(device: SidewalkDevice): Flow<RegisterResult> {
-        return sidewalk.register(device).flowOn(ioDispatcher)
+    suspend fun registerDevice(smsn: String): SidewalkResult<RegistrationDetail> {
+        return withContext(ioDispatcher) {
+            sidewalk.registerDevice(smsn)
+        }
     }
 }

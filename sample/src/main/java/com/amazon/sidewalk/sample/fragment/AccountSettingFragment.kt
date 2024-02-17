@@ -146,7 +146,7 @@ class AccountSettingFragment : Fragment(R.layout.fragment_account_setting), IDer
                 showMessage(
                     message = resources.getString(
                         R.string.deregister_success_msg,
-                        uiState.sidewalkId
+                        uiState.smsn
                     ),
                     title = resources.getString(R.string.success)
                 )
@@ -189,7 +189,7 @@ class AccountSettingFragment : Fragment(R.layout.fragment_account_setting), IDer
         }.show()
     }
 
-    override fun onDeregisterClick(sidewalkId: String) {
-        accountSettingViewModel.deregister(sidewalkId)
+    override fun onDeregisterClick(smsn: String) {
+        accountSettingViewModel.deregisterDevice(smsn)
     }
 }

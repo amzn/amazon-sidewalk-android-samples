@@ -20,5 +20,5 @@ package com.amazon.sidewalk.sample
 
 interface IDeregisterOnClickListener {
 
-    fun onDeregisterClick(sidewalkId: String)
+    fun onDeregisterClick(smsn: String)
 }

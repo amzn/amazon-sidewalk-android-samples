@@ -23,4 +23,8 @@
         android:id="@+id/normal_secure_channel"
         android:title="@string/connect_secure_channel" />
 
+    <item
+        android:id="@+id/coverage_test"
+        android:title="Coverage Test" />
+
 </menu>

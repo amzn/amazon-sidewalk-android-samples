@@ -29,9 +29,61 @@
         <action
             android:id="@+id/action_dashBoardFragment_to_connectionViewFragment"
             app:destination="@id/connectionViewFragment" />
+        <action
+            android:id="@+id/action_dashBoardFragment_to_coverageTestStartFragment"
+            app:destination="@id/navigation_coverage_test" />
     </fragment>
     <fragment
         android:id="@+id/connectionViewFragment"
         android:name="com.amazon.sidewalk.sample.fragment.ConnectionViewFragment"
         android:label="Connection View" />
+    <navigation
+        android:id="@+id/navigation_coverage_test"
+        app:startDestination="@id/coverageTestStartFragment">
+        <argument
+            android:name="smsn"
+            app:argType="string" />
+        <fragment
+            android:id="@+id/coverageTestStartFragment"
+            android:name="com.amazon.sidewalk.sample.fragment.CoverageTestStartFragment"
+            android:label="Coverage Test">
+            <argument
+                android:name="smsn"
+                app:argType="string" />
+            <action
+                android:id="@+id/action_coverageTestStartFragment_to_coverageTestInProgressFragment"
+                app:destination="@id/coverageTestInProgressFragment" />
+        </fragment>
+        <fragment
+            android:id="@+id/coverageTestInProgressFragment"
+            android:name="com.amazon.sidewalk.sample.fragment.CoverageTestInProgressFragment"
+            android:label="Coverage Test Progress">
+            <argument
+                android:name="smsn"
+                app:argType="string" />
+            <action
+                android:id="@+id/action_coverageTestInProgressFragment_to_coverageTestReportFragment"
+                app:destination="@id/coverageTestReportFragment"
+                app:popUpTo="@id/coverageTestReportFragment"
+                app:popUpToInclusive="true" />
+            <action
+                android:id="@+id/action_coverageTestInProgressFragment_to_coverageTestStartFragment"
+                app:destination="@id/coverageTestStartFragment"
+                app:popUpTo="@id/coverageTestStartFragment"
+                app:popUpToInclusive="true" />
+        </fragment>
+        <fragment
+            android:id="@+id/coverageTestReportFragment"
+            android:name="com.amazon.sidewalk.sample.fragment.CoverageTestReportFragment"
+            android:label="Coverage Test Report">
+            <argument
+                android:name="smsn"
+                app:argType="string" />
+        </fragment>
+        <action
+            android:id="@+id/action_global_dashBoardFragment"
+            app:destination="@id/dashBoardFragment"
+            app:popUpTo="@id/dashBoardFragment"
+            app:popUpToInclusive="true" />
+    </navigation>
 </navigation>

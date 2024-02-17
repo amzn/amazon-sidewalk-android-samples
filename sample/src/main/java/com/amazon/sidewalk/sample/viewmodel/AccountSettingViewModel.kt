@@ -37,7 +37,7 @@ sealed class AccountSettingUiState {
     class LwaToken(val token: String) : AccountSettingUiState()
     object LoggedIn : AccountSettingUiState()
     object LoggedOut : AccountSettingUiState()
-    class Deregistered(val sidewalkId: String) : AccountSettingUiState()
+    class Deregistered(val smsn: String) : AccountSettingUiState()
     class Failure(val event: AccountSettingEvent, val exception: Throwable?) : AccountSettingUiState()
 }
 
@@ -45,7 +45,7 @@ sealed class AccountSettingEvent(val message: String) {
     object RequestLwaToken : AccountSettingEvent("RequestLwaToken")
     object Login : AccountSettingEvent("Login")
     object Logout : AccountSettingEvent("Logout")
-    class Deregister(val sidewalkId: String) : AccountSettingEvent("Deregister")
+    class Deregister(val smsn: String) : AccountSettingEvent("Deregister")
 }
 
 @HiltViewModel
@@ -109,17 +109,17 @@ class AccountSettingViewModel @Inject constructor(
         }
     }
 
-    fun deregister(sidewalkId: String) {
+    fun deregisterDevice(smsn: String) {
         viewModelScope.launch {
             _uiState.update {
-                AccountSettingUiState.Loading(event = AccountSettingEvent.Deregister(sidewalkId))
+                AccountSettingUiState.Loading(event = AccountSettingEvent.Deregister(smsn))
             }
             val newUiState = when (
-                val result = accountSettingRepository.deregister(sidewalkId)
+                val result = accountSettingRepository.deregisterDevice(smsn)
             ) {
-                is SidewalkResult.Success -> AccountSettingUiState.Deregistered(sidewalkId)
+                is SidewalkResult.Success -> AccountSettingUiState.Deregistered(smsn)
                 is SidewalkResult.Failure -> AccountSettingUiState.Failure(
-                    AccountSettingEvent.Deregister(sidewalkId),
+                    AccountSettingEvent.Deregister(smsn),
                     result.exception
                 )
             }

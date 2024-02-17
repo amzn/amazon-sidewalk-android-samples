@@ -106,9 +106,9 @@ class AccountSettingRepository @Inject constructor(
         }
     }
 
-    suspend fun deregister(sidewalkId: String): SidewalkResult<Unit> {
+    suspend fun deregisterDevice(smsn: String): SidewalkResult<Unit> {
         return withContext(ioDispatcher) {
-            sidewalk.deregister(sidewalkId, true)
+            sidewalk.deregisterDevice(smsn, true)
         }
     }
 
