@@ -45,6 +45,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.amazon.sidewalk.message.MessageDescriptor
 import com.amazon.sidewalk.message.MessageType
 import com.amazon.sidewalk.message.SidewalkMessage
+import com.amazon.sidewalk.result.RegistrationDetail
 import com.amazon.sidewalk.sample.R
 import com.amazon.sidewalk.sample.adapter.SubscribeAdapter
 import com.amazon.sidewalk.sample.viewmodel.ConnectionEvent
@@ -107,9 +108,9 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
 
     private fun setArguments(view: View) {
         val isRegister = arguments?.getBoolean(ConnectionViewModel.ARG_REGISTERED)
-        val endpointId = arguments?.getString(ConnectionViewModel.ARG_ENDPOINT_ID)
+        val smsn = arguments?.getString(ConnectionViewModel.ARG_SMSN)
         val messageHeader = view.findViewById<TextView>(R.id.messageHeader)
-        messageHeader.text = getString(R.string.subscribe_msg_header, endpointId)
+        messageHeader.text = getString(R.string.subscribe_msg_header, smsn)
         if (isRegister == true) {
             registerButton.isEnabled = false
             registerButton.isClickable = false
@@ -122,7 +123,7 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
 
     private fun setOnClickListener(view: View) {
         registerButton.setOnClickListener {
-            connectionViewModel.register()
+            connectionViewModel.registerDevice()
         }
         view.findViewById<Button>(R.id.writeButton).setOnClickListener {
             write()
@@ -194,14 +195,19 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
             is ConnectionUiState.Registered -> {
                 progressDialog?.dismiss()
 
-                val wirelessDeviceId = uiState.wirelessDeviceId
-                val sidewalkId = uiState.sidewalkId
-                val message = """
-                    Register succeeded after establishing a secure channel:
-                    wirelessDeviceId=$wirelessDeviceId, sidewalkId=$sidewalkId,
-                    Start re-scanning devices.
-                """.trimIndent()
-                showMessageAndNavigateToPreviousScreen(message, isRegisterSuccess = true)
+                when (uiState.registrationDetail) {
+                    is RegistrationDetail.RegistrationSucceeded -> {
+                        val message = """
+                            Register succeeded after establishing a secure channel,
+                            Start re-scanning devices.
+                        """.trimIndent()
+                        showMessageAndNavigateToPreviousScreen(message, isRegisterSuccess = true)
+                    }
+                    is RegistrationDetail.AlreadyRegistered -> {
+                        val message = "Already registered."
+                        showMessage(message)
+                    }
+                }
             }
             is ConnectionUiState.Written -> {
                 editText.text.clear()

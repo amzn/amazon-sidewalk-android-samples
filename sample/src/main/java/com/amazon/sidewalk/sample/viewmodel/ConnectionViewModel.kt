@@ -22,9 +22,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amazon.sidewalk.SidewalkConnection
-import com.amazon.sidewalk.device.SidewalkDeviceDescriptor
 import com.amazon.sidewalk.message.SidewalkMessage
-import com.amazon.sidewalk.result.RegisterResult
+import com.amazon.sidewalk.result.RegistrationDetail
 import com.amazon.sidewalk.result.SidewalkResult
 import com.amazon.sidewalk.sample.data.ConnectionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,7 +38,7 @@ sealed class ConnectionUiState {
     object Idle : ConnectionUiState()
     class Loading(val event: ConnectionEvent) : ConnectionUiState()
     class Connected(val connection: SidewalkConnection) : ConnectionUiState()
-    class Registered(val wirelessDeviceId: String, val sidewalkId: String) : ConnectionUiState()
+    class Registered(val registrationDetail: RegistrationDetail) : ConnectionUiState()
     class Written(val messages: List<Pair<SidewalkMessage, MessageType>>) : ConnectionUiState()
     class Read(val messages: List<Pair<SidewalkMessage, MessageType>>) : ConnectionUiState()
     object Disconnected : ConnectionUiState()
@@ -47,7 +46,7 @@ sealed class ConnectionUiState {
 }
 
 sealed class ConnectionEvent(val message: String) {
-    class Connect(endpointId: String) : ConnectionEvent("Connect $endpointId")
+    class Connect(smsn: String) : ConnectionEvent("Connect $smsn")
     object Register : ConnectionEvent("Register")
     class Write(message: SidewalkMessage) : ConnectionEvent("Write")
     object Subscribe : ConnectionEvent("Subscribe")
@@ -66,7 +65,7 @@ class ConnectionViewModel @Inject constructor(
 ) : ViewModel() {
 
     companion object {
-        const val ARG_ENDPOINT_ID = "endpointId"
+        const val ARG_SMSN = "smsn"
         const val ARG_REGISTERED = "registered"
     }
 
@@ -74,9 +73,8 @@ class ConnectionViewModel @Inject constructor(
     val uiState: StateFlow<ConnectionUiState> = _uiState.asStateFlow()
 
     private lateinit var sidewalkConnection: SidewalkConnection
-    private val descriptor: SidewalkDeviceDescriptor by lazy {
-        val endpointId = savedStateHandle.get<String>(ARG_ENDPOINT_ID)!!
-        SidewalkDeviceDescriptor.create(endpointIdFilter = endpointId)
+    private val smsn: String by lazy {
+        savedStateHandle.get<String>(ARG_SMSN)!!
     }
 
     private val subscribeList = mutableListOf<Pair<SidewalkMessage, MessageType>>()
@@ -85,21 +83,20 @@ class ConnectionViewModel @Inject constructor(
         establishSecureConnect()
     }
 
-    fun establishSecureConnect() {
+    private fun establishSecureConnect() {
         viewModelScope.launch {
             _uiState.update {
-                val endpointId = descriptor.endpointIdFilter
-                ConnectionUiState.Loading(event = ConnectionEvent.Connect(endpointId))
+                ConnectionUiState.Loading(event = ConnectionEvent.Connect(smsn))
             }
             val newUiState = when (
-                val result = connectionRepository.establishSecureConnect(descriptor)
+                val result = connectionRepository.establishSecureConnect(smsn)
             ) {
                 is SidewalkResult.Success -> {
                     sidewalkConnection = result.value
                     ConnectionUiState.Connected(result.value)
                 }
                 is SidewalkResult.Failure -> ConnectionUiState.Failure(
-                    ConnectionEvent.Connect(descriptor.endpointIdFilter),
+                    ConnectionEvent.Connect(smsn),
                     result.exception
                 )
             }
@@ -126,25 +123,24 @@ class ConnectionViewModel @Inject constructor(
         }
     }
 
-    fun register() {
+    fun registerDevice() {
         viewModelScope.launch {
             _uiState.update {
                 ConnectionUiState.Loading(event = ConnectionEvent.Register)
             }
-            connectionRepository.register(sidewalkConnection)
-                .collect { result ->
-                    val newUiState = when (result) {
-                        is RegisterResult.Success -> ConnectionUiState.Registered(
-                            wirelessDeviceId = result.wirelessDeviceId,
-                            sidewalkId = result.sidewalkId
-                        )
-                        is RegisterResult.Failure -> ConnectionUiState.Failure(
-                            ConnectionEvent.Subscribe,
-                            result.exception
-                        )
-                    }
-                    _uiState.update { newUiState }
+            val newUiState = when (
+                val result = connectionRepository.registerDevice(sidewalkConnection)
+            ) {
+                is SidewalkResult.Success -> {
+                    ConnectionUiState.Registered(registrationDetail = result.value)
                 }
+                is SidewalkResult.Failure ->
+                    ConnectionUiState.Failure(
+                        ConnectionEvent.Register,
+                        result.exception
+                    )
+            }
+            _uiState.update { newUiState }
         }
     }
 

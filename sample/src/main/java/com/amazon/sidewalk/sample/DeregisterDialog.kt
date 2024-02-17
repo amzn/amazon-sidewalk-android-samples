@@ -61,16 +61,16 @@ class DeregisterDialog private constructor() : DialogFragment() {
 
     private fun setupClickListeners(view: View) {
         view.findViewById<AppCompatButton>(R.id.btn_positive).setOnClickListener {
-            val input: EditText = view.findViewById(R.id.sidewalk_id)
-            val sidewalkId = input.text.toString()
-            if (sidewalkId.isEmpty()) {
+            val input: EditText = view.findViewById(R.id.smsn)
+            val smsn = input.text.toString()
+            if (smsn.isEmpty()) {
                 input.error = resources.getString(R.string.deregister_alert_msg)
                 input.requestFocus()
             } else {
                 if (parentFragment is IDeregisterOnClickListener) {
-                    (parentFragment as IDeregisterOnClickListener).onDeregisterClick(sidewalkId)
+                    (parentFragment as IDeregisterOnClickListener).onDeregisterClick(smsn)
                 } else if (activity is IDeregisterOnClickListener) {
-                    (activity as IDeregisterOnClickListener).onDeregisterClick(sidewalkId)
+                    (activity as IDeregisterOnClickListener).onDeregisterClick(smsn)
                 }
                 dismiss()
             }

@@ -38,7 +38,7 @@ import com.amazon.sidewalk.SidewalkConnection
 import com.amazon.sidewalk.message.MessageDescriptor
 import com.amazon.sidewalk.message.MessageType
 import com.amazon.sidewalk.message.SidewalkMessage
-import com.amazon.sidewalk.result.RegisterResult
+import com.amazon.sidewalk.result.RegistrationDetail
 import com.amazon.sidewalk.result.SidewalkResult
 import com.amazon.sidewalk.sample.R
 import com.amazon.sidewalk.sample.data.ConnectionRepository
@@ -91,12 +91,9 @@ class ConnectionViewFragmentTest {
         coEvery { write(any()) } returns SidewalkResult.Success(Unit)
     }
     private val sidewalk = mockk<Sidewalk> {
-        coEvery { secureConnect(any()) } returns SidewalkResult.Success(connection)
-        every { register(any<SidewalkConnection>()) } returns flowOf(
-            RegisterResult.Success(
-                wirelessDeviceId = "WirelessDeviceId",
-                sidewalkId = "SidewalkId"
-            )
+        coEvery { secureConnectDevice(any<String>()) } returns SidewalkResult.Success(connection)
+        coEvery { registerDevice(any<SidewalkConnection>()) } returns SidewalkResult.Success(
+            RegistrationDetail.RegistrationSucceeded
         )
     }
 
@@ -104,7 +101,7 @@ class ConnectionViewFragmentTest {
     @JvmField
     val connectionRepository: ConnectionRepository = ConnectionRepository(sidewalk, Dispatchers.IO)
 
-    private val endpointId = "BFFFFC12"
+    private val smsn = "A1A5BD7A90"
 
     @Before
     fun setup() {
@@ -114,10 +111,10 @@ class ConnectionViewFragmentTest {
     @Test
     fun `Launch ConnectionViewFragment with unregistered device, then views are initialized`() {
         launchFragmentInHiltContainer<ConnectionViewFragment>(
-            fragmentArgs = bundleOf(ConnectionViewModel.ARG_ENDPOINT_ID to endpointId)
+            fragmentArgs = bundleOf(ConnectionViewModel.ARG_SMSN to smsn)
         ) {
             onView(withId(R.id.messageHeader)).check(
-                matches(withText(getString(R.string.subscribe_msg_header, endpointId)))
+                matches(withText(getString(R.string.subscribe_msg_header, smsn)))
             )
             onView(withId(R.id.registerButton)).apply {
                 check(matches(isEnabled()))
@@ -135,7 +132,7 @@ class ConnectionViewFragmentTest {
     @Test
     fun `Launch ConnectionViewFragment, then write a message`() {
         launchFragmentInHiltContainer<ConnectionViewFragment>(
-            fragmentArgs = bundleOf(ConnectionViewModel.ARG_ENDPOINT_ID to endpointId)
+            fragmentArgs = bundleOf(ConnectionViewModel.ARG_SMSN to smsn)
         ) {
             onView(withId(R.id.editText)).perform(typeText("sidewalk"))
             onView(withId(R.id.writeButton)).perform(click())
@@ -146,7 +143,7 @@ class ConnectionViewFragmentTest {
     @Test
     fun `Launch ConnectionViewFragment with unregistered device, then register it through connection`() {
         launchFragmentInHiltContainer<ConnectionViewFragment>(
-            fragmentArgs = bundleOf(ConnectionViewModel.ARG_ENDPOINT_ID to endpointId)
+            fragmentArgs = bundleOf(ConnectionViewModel.ARG_SMSN to smsn)
         ) {
             onView(withId(R.id.registerButton)).apply {
                 check(matches(isEnabled()))
@@ -166,7 +163,7 @@ class ConnectionViewFragmentTest {
     fun `Launch ConnectionViewFragment with registered device, then register button is disabled`() {
         launchFragmentInHiltContainer<ConnectionViewFragment>(
             fragmentArgs = bundleOf(
-                ConnectionViewModel.ARG_ENDPOINT_ID to endpointId,
+                ConnectionViewModel.ARG_SMSN to smsn,
                 ConnectionViewModel.ARG_REGISTERED to true
             )
         ) {

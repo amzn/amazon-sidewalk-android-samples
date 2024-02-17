@@ -47,6 +47,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.amazon.sidewalk.device.BeaconInfo
 import com.amazon.sidewalk.device.SidewalkDevice
+import com.amazon.sidewalk.result.RegistrationDetail
 import com.amazon.sidewalk.sample.R
 import com.amazon.sidewalk.sample.adapter.DeviceAdapter
 import com.amazon.sidewalk.sample.adapter.SectionAdapter
@@ -209,13 +210,17 @@ class ScanFragment : Fragment(R.layout.fragment_scan) {
                     sidewalkDevice.beaconInfo.deviceMode == BeaconInfo.DeviceMode.Normal
                 val bundle = bundleOf(
                     ConnectionViewModel.ARG_REGISTERED to isRegister,
-                    ConnectionViewModel.ARG_ENDPOINT_ID to sidewalkDevice.endpointId
+                    ConnectionViewModel.ARG_SMSN to sidewalkDevice.truncatedSmsn
                 )
                 findNavController().navigate(
                     R.id.action_dashBoardFragment_to_connectionViewFragment, bundle
                 )
             }
-            R.id.oobe_register -> scanViewModel.register(sidewalkDevice)
+            R.id.oobe_register -> scanViewModel.registerDevice(sidewalkDevice.truncatedSmsn)
+            R.id.coverage_test -> {
+                val action = ScanFragmentDirections.actionDashBoardFragmentToCoverageTestStartFragment(sidewalkDevice.truncatedSmsn)
+                findNavController().navigate(action)
+            }
         }
     }
 
@@ -232,14 +237,14 @@ class ScanFragment : Fragment(R.layout.fragment_scan) {
                     is ScanEvent.Register -> {
                         progressDialog?.dismiss()
                         progressDialog = ProgressDialog(requireContext()).apply {
-                            setMessage("Action ${event.device.name}, ${event.device.address}")
+                            setMessage("Action ${event.smsn}")
                             setCancelable(false)
                             setButton(
                                 DialogInterface.BUTTON_NEGATIVE,
                                 getString(android.R.string.cancel)
                             ) { dialog, _ ->
                                 dialog.dismiss()
-                                scanViewModel.cancelRegister()
+                                scanViewModel.cancelRegisterDevice()
                             }
                         }
                         progressDialog?.show()
@@ -259,13 +264,20 @@ class ScanFragment : Fragment(R.layout.fragment_scan) {
             }
             is ScanUiState.Registered -> {
                 progressDialog?.dismiss()
-                showMessage(
-                    getString(R.string.register),
-                    """
-                        Registration for ${uiState.sidewalkId} succeeded with
-                        Wireless Device ID:${uiState.wirelessDeviceId}.
-                    """.trimIndent()
-                )
+                when (uiState.registrationDetail) {
+                    is RegistrationDetail.RegistrationSucceeded -> {
+                        showMessage(
+                            getString(R.string.register),
+                            "Registration succeeded."
+                        )
+                    }
+                    is RegistrationDetail.AlreadyRegistered -> {
+                        showMessage(
+                            getString(R.string.register),
+                            "Already registered."
+                        )
+                    }
+                }
                 // Re-scan devices
                 scanViewModel.scan(force = true)
             }

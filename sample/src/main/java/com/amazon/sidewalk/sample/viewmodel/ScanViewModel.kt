@@ -21,7 +21,7 @@ package com.amazon.sidewalk.sample.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amazon.sidewalk.device.SidewalkDevice
-import com.amazon.sidewalk.result.RegisterResult
+import com.amazon.sidewalk.result.RegistrationDetail
 import com.amazon.sidewalk.result.SidewalkResult
 import com.amazon.sidewalk.sample.data.ScanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,13 +37,13 @@ sealed class ScanUiState {
     object Idle : ScanUiState()
     class Loading(val event: ScanEvent) : ScanUiState()
     class Scanned(val devices: List<SidewalkDevice>) : ScanUiState()
-    class Registered(val wirelessDeviceId: String, val sidewalkId: String) : ScanUiState()
+    class Registered(val registrationDetail: RegistrationDetail) : ScanUiState()
     class Failure(val event: ScanEvent, val exception: Throwable?) : ScanUiState()
 }
 
 sealed class ScanEvent(val message: String) {
     object Scan : ScanEvent("Scan")
-    class Register(val device: SidewalkDevice) : ScanEvent("Register")
+    class Register(val smsn: String) : ScanEvent("Register")
 }
 
 @HiltViewModel
@@ -82,23 +82,21 @@ class ScanViewModel @Inject constructor(private val scanRepository: ScanReposito
         }
     }
 
-    fun register(device: SidewalkDevice) {
+    fun registerDevice(smsn: String) {
         registerJob = viewModelScope.launch {
             _uiState.update {
-                ScanUiState.Loading(event = ScanEvent.Register(device))
+                ScanUiState.Loading(event = ScanEvent.Register(smsn))
             }
-            scanRepository.register(device)
-                .collect { result ->
-                    val newUiState = when (result) {
-                        is RegisterResult.Success -> ScanUiState.Registered(
-                            wirelessDeviceId = result.wirelessDeviceId,
-                            sidewalkId = result.sidewalkId
-                        )
-                        is RegisterResult.Failure ->
-                            ScanUiState.Failure(ScanEvent.Register(device), result.exception)
-                    }
-                    _uiState.update { newUiState }
+            val newUiState = when (
+                val result = scanRepository.registerDevice(smsn)
+            ) {
+                is SidewalkResult.Success -> {
+                    ScanUiState.Registered(registrationDetail = result.value)
                 }
+                is SidewalkResult.Failure ->
+                    ScanUiState.Failure(ScanEvent.Register(smsn), result.exception)
+            }
+            _uiState.update { newUiState }
         }
     }
 
@@ -107,7 +105,7 @@ class ScanViewModel @Inject constructor(private val scanRepository: ScanReposito
         scanJob = null
     }
 
-    fun cancelRegister() {
+    fun cancelRegisterDevice() {
         registerJob?.cancel()
         registerJob = null
     }

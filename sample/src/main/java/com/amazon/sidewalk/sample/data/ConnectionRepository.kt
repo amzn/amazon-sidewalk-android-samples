@@ -20,15 +20,16 @@ package com.amazon.sidewalk.sample.data
 
 import com.amazon.sidewalk.Sidewalk
 import com.amazon.sidewalk.SidewalkConnection
-import com.amazon.sidewalk.device.SidewalkDeviceDescriptor
+import com.amazon.sidewalk.coverage.SidewalkCoverageTestConfig
+import com.amazon.sidewalk.coverage.SidewalkCoverageTestEvent
 import com.amazon.sidewalk.message.SidewalkMessage
-import com.amazon.sidewalk.result.RegisterResult
+import com.amazon.sidewalk.result.RegistrationDetail
 import com.amazon.sidewalk.result.SidewalkResult
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 class ConnectionRepository @Inject constructor(
     private val sidewalk: Sidewalk,
@@ -36,10 +37,10 @@ class ConnectionRepository @Inject constructor(
 ) {
 
     suspend fun establishSecureConnect(
-        descriptor: SidewalkDeviceDescriptor
+        smsn: String
     ): SidewalkResult<SidewalkConnection> {
         return withContext(ioDispatcher) {
-            sidewalk.secureConnect(descriptor)
+            sidewalk.secureConnectDevice(smsn)
         }
     }
 
@@ -49,8 +50,10 @@ class ConnectionRepository @Inject constructor(
         }
     }
 
-    fun register(connection: SidewalkConnection): Flow<RegisterResult> {
-        return sidewalk.register(connection).flowOn(ioDispatcher)
+    suspend fun registerDevice(connection: SidewalkConnection): SidewalkResult<RegistrationDetail> {
+        return withContext(ioDispatcher) {
+            sidewalk.registerDevice(connection)
+        }
     }
 
     fun subscribe(connection: SidewalkConnection): Flow<SidewalkResult<SidewalkMessage>> {
@@ -63,6 +66,26 @@ class ConnectionRepository @Inject constructor(
     ): SidewalkResult<Unit> {
         return withContext(ioDispatcher) {
             connection.write(message)
+        }
+    }
+
+    fun startCoverageTest(
+        connection: SidewalkConnection,
+        pingInterval: Int,
+        testDuration: Int,
+        progressMode: Boolean
+    ): Flow<SidewalkResult<SidewalkCoverageTestEvent>> {
+        val config = SidewalkCoverageTestConfig(
+            pingInterval = pingInterval,
+            testDuration = testDuration,
+            shouldReceivePingPongProgress = progressMode
+        )
+        return connection.startCoverageTest(config).flowOn(ioDispatcher)
+    }
+
+    suspend fun stopCoverageTest(connection: SidewalkConnection) {
+        return withContext(ioDispatcher) {
+            connection.stopCoverageTest()
         }
     }
 }
