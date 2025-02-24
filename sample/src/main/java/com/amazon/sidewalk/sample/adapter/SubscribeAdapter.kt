@@ -32,16 +32,20 @@ import com.amazon.sidewalk.sample.viewmodel.MessageType
 import java.text.SimpleDateFormat
 import java.util.Date
 
-class SubscribeAdapter :
-    ListAdapter<Pair<SidewalkMessage, MessageType>, SubscribeAdapter.ViewHolder>(DiffCallback) {
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+class SubscribeAdapter : ListAdapter<Pair<SidewalkMessage, MessageType>, SubscribeAdapter.ViewHolder>(DiffCallback) {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
         val itemView =
             LayoutInflater.from(parent.context).inflate(R.layout.subscribe_content, parent, false)
         return ViewHolder(itemView)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val message = getItem(position)
         val timeStamp: String =
             SimpleDateFormat("HH:mm:ss").format(Date())
@@ -50,27 +54,27 @@ class SubscribeAdapter :
         holder.messageView.text = subscribeMessage
     }
 
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class ViewHolder(
+        itemView: View,
+    ) : RecyclerView.ViewHolder(itemView) {
         val messageView = itemView.findViewById(R.id.contentInfo) as TextView
     }
 
     object DiffCallback : DiffUtil.ItemCallback<Pair<SidewalkMessage, MessageType>>() {
         override fun areItemsTheSame(
             oldItem: Pair<SidewalkMessage, MessageType>,
-            newItem: Pair<SidewalkMessage, MessageType>
-        ): Boolean {
-            return oldItem.first == newItem.first &&
+            newItem: Pair<SidewalkMessage, MessageType>,
+        ): Boolean =
+            oldItem.first == newItem.first &&
                 oldItem.second == newItem.second
-        }
 
         override fun areContentsTheSame(
             oldItem: Pair<SidewalkMessage, MessageType>,
-            newItem: Pair<SidewalkMessage, MessageType>
-        ): Boolean {
-            return oldItem.first.message.asHexUpper == newItem.first.message.asHexUpper &&
+            newItem: Pair<SidewalkMessage, MessageType>,
+        ): Boolean =
+            oldItem.first.message.asHexUpper == newItem.first.message.asHexUpper &&
                 oldItem.first.descriptor.type == newItem.first.descriptor.type &&
                 oldItem.first.descriptor.id == newItem.first.descriptor.id &&
                 oldItem.second.type == newItem.second.type
-        }
     }
 }

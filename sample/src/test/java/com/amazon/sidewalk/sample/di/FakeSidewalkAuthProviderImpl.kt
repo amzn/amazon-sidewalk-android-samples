@@ -22,8 +22,8 @@ import com.amazon.sidewalk.authentication.SidewalkAuthProvider
 import com.amazon.sidewalk.result.SidewalkResult
 import javax.inject.Inject
 
-class FakeSidewalkAuthProviderImpl @Inject constructor() : SidewalkAuthProvider {
-    override suspend fun getToken(): SidewalkResult<String> {
-        return SidewalkResult.Success("fakeToken")
+class FakeSidewalkAuthProviderImpl
+    @Inject
+    constructor() : SidewalkAuthProvider {
+        override suspend fun getToken(): SidewalkResult<String> = SidewalkResult.Success("fakeToken")
     }
-}

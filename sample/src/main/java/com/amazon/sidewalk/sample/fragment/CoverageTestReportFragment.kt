@@ -46,7 +46,10 @@ class CoverageTestReportFragment : Fragment(R.layout.fragment_coverage_test_repo
     private lateinit var reportLayout: LinearLayout
     private var progressDialog: ProgressDialog? = null
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
         handleOnBackPress()
         reportLayout = view.findViewById(R.id.report)
@@ -66,10 +69,11 @@ class CoverageTestReportFragment : Fragment(R.layout.fragment_coverage_test_repo
         when (state) {
             is CoverageTestUiState.Idle -> Unit
             is CoverageTestUiState.Loading -> {
-                progressDialog = ProgressDialog(requireContext()).apply {
-                    setMessage(getString(R.string.reading_report))
-                    setCancelable(false)
-                }
+                progressDialog =
+                    ProgressDialog(requireContext()).apply {
+                        setMessage(getString(R.string.reading_report))
+                        setCancelable(false)
+                    }
                 progressDialog?.show()
             }
             is CoverageTestUiState.Failure -> {
@@ -101,24 +105,23 @@ class CoverageTestReportFragment : Fragment(R.layout.fragment_coverage_test_repo
             getString(R.string.link_type, getLinkType(data.linkType))
     }
 
-    private fun getLinkType(linkType: Int): String {
-        return when (linkType) {
+    private fun getLinkType(linkType: Int): String =
+        when (linkType) {
             0 -> "LoRA"
             1 -> "FSK"
             2 -> "BLE"
             14 -> "AUTO_SUB_GHZ"
             else -> "AUTO_ALL_PHY"
         }
-    }
 
     private fun showMessage(message: String?) {
-        AlertDialog.Builder(requireContext())
+        AlertDialog
+            .Builder(requireContext())
             .setTitle(getString(R.string.error))
             .setMessage(message)
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 findNavController().navigate(R.id.action_global_dashBoardFragment)
-            }
-            .show()
+            }.show()
     }
 
     private fun handleOnBackPress() {

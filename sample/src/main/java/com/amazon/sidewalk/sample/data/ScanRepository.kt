@@ -22,23 +22,22 @@ import com.amazon.sidewalk.Sidewalk
 import com.amazon.sidewalk.device.SidewalkDevice
 import com.amazon.sidewalk.result.RegistrationDetail
 import com.amazon.sidewalk.result.SidewalkResult
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class ScanRepository @Inject constructor(
-    private val sidewalk: Sidewalk,
-    private val ioDispatcher: CoroutineDispatcher
-) {
-    fun scan(): Flow<SidewalkResult<SidewalkDevice>> {
-        return sidewalk.scan().flowOn(ioDispatcher)
-    }
+class ScanRepository
+    @Inject
+    constructor(
+        private val sidewalk: Sidewalk,
+        private val ioDispatcher: CoroutineDispatcher,
+    ) {
+        fun scan(): Flow<SidewalkResult<SidewalkDevice>> = sidewalk.scan().flowOn(ioDispatcher)
 
-    suspend fun registerDevice(smsn: String): SidewalkResult<RegistrationDetail> {
-        return withContext(ioDispatcher) {
-            sidewalk.registerDevice(smsn)
-        }
+        suspend fun registerDevice(smsn: String): SidewalkResult<RegistrationDetail> =
+            withContext(ioDispatcher) {
+                sidewalk.registerDevice(smsn)
+            }
     }
-}

@@ -50,9 +50,6 @@ import dagger.hilt.android.testing.HiltTestApplication
 import dagger.hilt.android.testing.UninstallModules
 import io.mockk.every
 import io.mockk.mockk
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import org.hamcrest.Matchers.anything
@@ -63,53 +60,59 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDialog
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 @UninstallModules(SidewalkAuthModule::class)
 @HiltAndroidTest
 @Config(application = HiltTestApplication::class)
 class ScanFragmentTest {
-
     @get:Rule(order = 0)
     var hiltRule = HiltAndroidRule(this)
 
-    private val sidewalk = mockk<Sidewalk> {
-        every { scan() } returns flowOf(
-            SidewalkResult.Success(
-                mockk {
-                    every { name } returns "nordic-dk1"
-                    every { address } returns "00:11:22:33:44:55"
-                    every { endpointId } returns "BAC688BC1F"
-                    every { rssi } returns -10
-                    every { beaconInfo } returns mockk {
-                        every { deviceMode } returns BeaconInfo.DeviceMode.OOBE
-                        every { batteryLevel } returns BeaconInfo.BatteryLevel.Normal
-                    }
-                }
-            ),
-            SidewalkResult.Success(
-                mockk {
-                    every { name } returns "fetch2"
-                    every { address } returns "FF:EE:DD:CC:BB:AA"
-                    every { endpointId } returns "BFFFFFFB88"
-                    every { rssi } returns -13
-                    every { beaconInfo } returns mockk {
-                        every { deviceMode } returns BeaconInfo.DeviceMode.Normal
-                        every { batteryLevel } returns BeaconInfo.BatteryLevel.Low
-                    }
-                }
-            )
-        )
-        every { register(any<SidewalkDevice>()) } answers {
-            val device = args[0] as SidewalkDevice
-            flowOf(
-                RegisterResult.Success(
-                    wirelessDeviceId = "WirelessDeviceId",
-                    sidewalkId = device.endpointId
+    private val sidewalk =
+        mockk<Sidewalk> {
+            every { scan() } returns
+                flowOf(
+                    SidewalkResult.Success(
+                        mockk {
+                            every { name } returns "nordic-dk1"
+                            every { address } returns "00:11:22:33:44:55"
+                            every { endpointId } returns "BAC688BC1F"
+                            every { rssi } returns -10
+                            every { beaconInfo } returns
+                                mockk {
+                                    every { deviceMode } returns BeaconInfo.DeviceMode.OOBE
+                                    every { batteryLevel } returns BeaconInfo.BatteryLevel.Normal
+                                }
+                        },
+                    ),
+                    SidewalkResult.Success(
+                        mockk {
+                            every { name } returns "fetch2"
+                            every { address } returns "FF:EE:DD:CC:BB:AA"
+                            every { endpointId } returns "BFFFFFFB88"
+                            every { rssi } returns -13
+                            every { beaconInfo } returns
+                                mockk {
+                                    every { deviceMode } returns BeaconInfo.DeviceMode.Normal
+                                    every { batteryLevel } returns BeaconInfo.BatteryLevel.Low
+                                }
+                        },
+                    ),
                 )
-            )
+            every { register(any<SidewalkDevice>()) } answers {
+                val device = args[0] as SidewalkDevice
+                flowOf(
+                    RegisterResult.Success(
+                        wirelessDeviceId = "WirelessDeviceId",
+                        sidewalkId = device.endpointId,
+                    ),
+                )
+            }
         }
-    }
 
     @BindValue
     @JvmField
@@ -124,16 +127,16 @@ class ScanFragmentTest {
     fun `Launch ScanFragment, then scanning is triggered automatically`() {
         launchFragmentInHiltContainer<ScanFragment> {
             onView(withRecyclerViewAtPosition(R.id.list, 0, R.id.device_section)).check(
-                matches(withText(getString(R.string.unregistered_devices).uppercase()))
+                matches(withText(getString(R.string.unregistered_devices).uppercase())),
             )
             onView(withRecyclerViewAtPosition(R.id.list, 1, R.id.deviceInfo)).check(
-                matches(withText("nordic-dk1 BAC688BC1F -10"))
+                matches(withText("nordic-dk1 BAC688BC1F -10")),
             )
             onView(withRecyclerViewAtPosition(R.id.list, 2, R.id.device_section)).check(
-                matches(withText(getString(R.string.registered_devices).uppercase()))
+                matches(withText(getString(R.string.registered_devices).uppercase())),
             )
             onView(withRecyclerViewAtPosition(R.id.list, 3, R.id.deviceInfo)).check(
-                matches(withText("fetch2 BFFFFFFB88 -13"))
+                matches(withText("fetch2 BFFFFFFB88 -13")),
             )
         }
     }

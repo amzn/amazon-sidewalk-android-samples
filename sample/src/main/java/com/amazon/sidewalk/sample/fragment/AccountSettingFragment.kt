@@ -38,11 +38,13 @@ import com.amazon.sidewalk.sample.viewmodel.AccountSettingEvent
 import com.amazon.sidewalk.sample.viewmodel.AccountSettingUiState
 import com.amazon.sidewalk.sample.viewmodel.AccountSettingViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class AccountSettingFragment : Fragment(R.layout.fragment_account_setting), IDeregisterOnClickListener {
+class AccountSettingFragment :
+    Fragment(R.layout.fragment_account_setting),
+    IDeregisterOnClickListener {
     private val accountSettingViewModel by viewModels<AccountSettingViewModel>()
 
     @Inject
@@ -50,7 +52,10 @@ class AccountSettingFragment : Fragment(R.layout.fragment_account_setting), IDer
 
     private var progressDialog: ProgressDialog? = null
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
         // Start a coroutine in the lifecycle scope
@@ -70,10 +75,11 @@ class AccountSettingFragment : Fragment(R.layout.fragment_account_setting), IDer
         view.findViewById<TextView>(R.id.logout).setOnClickListener {
             accountSettingViewModel.logout()
         }
-        view.findViewById<TextView>(R.id.tv_login_status).text = resources.getString(
-            R.string.status,
-            resources.getString(R.string.status_logged_out)
-        )
+        view.findViewById<TextView>(R.id.tv_login_status).text =
+            resources.getString(
+                R.string.status,
+                resources.getString(R.string.status_logged_out),
+            )
         view.findViewById<TextView>(R.id.tv_scan).setOnClickListener {
             activity?.onBackPressed()
         }
@@ -97,26 +103,28 @@ class AccountSettingFragment : Fragment(R.layout.fragment_account_setting), IDer
         when (uiState) {
             is AccountSettingUiState.Idle -> Unit
             is AccountSettingUiState.Loading -> {
-                progressDialog = ProgressDialog(requireContext()).apply {
-                    setMessage("Action ${uiState.event.message}")
-                    setCancelable(false)
-                    setButton(
-                        DialogInterface.BUTTON_NEGATIVE,
-                        getString(android.R.string.cancel)
-                    ) { dialog, _ ->
-                        dialog.dismiss()
+                progressDialog =
+                    ProgressDialog(requireContext()).apply {
+                        setMessage("Action ${uiState.event.message}")
+                        setCancelable(false)
+                        setButton(
+                            DialogInterface.BUTTON_NEGATIVE,
+                            getString(android.R.string.cancel),
+                        ) { dialog, _ ->
+                            dialog.dismiss()
+                        }
                     }
-                }
                 progressDialog?.show()
             }
             is AccountSettingUiState.LwaToken -> {
                 view?.apply {
                     findViewById<TextView>(R.id.login).visibility = View.GONE
                     findViewById<TextView>(R.id.logout).visibility = View.VISIBLE
-                    findViewById<TextView>(R.id.tv_login_status).text = resources.getString(
-                        R.string.status,
-                        resources.getString(R.string.status_logged_in)
-                    )
+                    findViewById<TextView>(R.id.tv_login_status).text =
+                        resources.getString(
+                            R.string.status,
+                            resources.getString(R.string.status_logged_in),
+                        )
                 }
                 progressDialog?.dismiss()
             }
@@ -124,10 +132,11 @@ class AccountSettingFragment : Fragment(R.layout.fragment_account_setting), IDer
                 view?.apply {
                     findViewById<TextView>(R.id.login).visibility = View.GONE
                     findViewById<TextView>(R.id.logout).visibility = View.VISIBLE
-                    findViewById<TextView>(R.id.tv_login_status).text = resources.getString(
-                        R.string.status,
-                        resources.getString(R.string.status_logged_in)
-                    )
+                    findViewById<TextView>(R.id.tv_login_status).text =
+                        resources.getString(
+                            R.string.status,
+                            resources.getString(R.string.status_logged_in),
+                        )
                 }
                 progressDialog?.dismiss()
             }
@@ -135,20 +144,22 @@ class AccountSettingFragment : Fragment(R.layout.fragment_account_setting), IDer
                 view?.apply {
                     findViewById<TextView>(R.id.login).visibility = View.VISIBLE
                     findViewById<TextView>(R.id.logout).visibility = View.GONE
-                    findViewById<TextView>(R.id.tv_login_status).text = resources.getString(
-                        R.string.status,
-                        resources.getString(R.string.status_logged_out)
-                    )
+                    findViewById<TextView>(R.id.tv_login_status).text =
+                        resources.getString(
+                            R.string.status,
+                            resources.getString(R.string.status_logged_out),
+                        )
                 }
                 progressDialog?.dismiss()
             }
             is AccountSettingUiState.Deregistered -> {
                 showMessage(
-                    message = resources.getString(
-                        R.string.deregister_success_msg,
-                        uiState.smsn
-                    ),
-                    title = resources.getString(R.string.success)
+                    message =
+                        resources.getString(
+                            R.string.deregister_success_msg,
+                            uiState.smsn,
+                        ),
+                    title = resources.getString(R.string.success),
                 )
                 progressDialog?.dismiss()
 
@@ -179,14 +190,19 @@ class AccountSettingFragment : Fragment(R.layout.fragment_account_setting), IDer
         }
     }
 
-    private fun showMessage(message: String, title: String? = null) {
-        AlertDialog.Builder(requireContext()).apply {
-            if (title != null) {
-                setTitle(title)
-            }
-            setMessage(message)
-            setPositiveButton(android.R.string.ok, null)
-        }.show()
+    private fun showMessage(
+        message: String,
+        title: String? = null,
+    ) {
+        AlertDialog
+            .Builder(requireContext())
+            .apply {
+                if (title != null) {
+                    setTitle(title)
+                }
+                setMessage(message)
+                setPositiveButton(android.R.string.ok, null)
+            }.show()
     }
 
     override fun onDeregisterClick(smsn: String) {

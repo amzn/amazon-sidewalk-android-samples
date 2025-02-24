@@ -60,7 +60,6 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ScanFragment : Fragment(R.layout.fragment_scan) {
-
     private val bleRuntimePermissionsLauncher =
         registerForActivityResult(RequestMultiplePermissions()) { permissions ->
             if (permissions.values.all { it }) {
@@ -68,7 +67,7 @@ class ScanFragment : Fragment(R.layout.fragment_scan) {
             } else {
                 showMessage(
                     "BLE permission denied",
-                    "Please provide BLE permissions for the app to work properly."
+                    "Please provide BLE permissions for the app to work properly.",
                 )
             }
         }
@@ -80,7 +79,7 @@ class ScanFragment : Fragment(R.layout.fragment_scan) {
             } else {
                 showMessage(
                     "BLE permission denied",
-                    "Please provide BLE permissions for the app to work properly."
+                    "Please provide BLE permissions for the app to work properly.",
                 )
             }
         }
@@ -90,20 +89,22 @@ class ScanFragment : Fragment(R.layout.fragment_scan) {
             if (permissions.values.any { !it }) {
                 showMessage(
                     "Location permission denied",
-                    "Please provide Location permissions for the app to work properly."
+                    "Please provide Location permissions for the app to work properly.",
                 )
             }
         }
 
     private val scanViewModel by viewModels<ScanViewModel>()
 
-    private val registerDeviceAdapter = DeviceAdapter { sidewalkDevice, itemId ->
-        actionPerformOnDevice(sidewalkDevice, itemId)
-    }
+    private val registerDeviceAdapter =
+        DeviceAdapter { sidewalkDevice, itemId ->
+            actionPerformOnDevice(sidewalkDevice, itemId)
+        }
 
-    private val unregisterDeviceAdapter = DeviceAdapter { sidewalkDevice, itemId ->
-        actionPerformOnDevice(sidewalkDevice, itemId)
-    }
+    private val unregisterDeviceAdapter =
+        DeviceAdapter { sidewalkDevice, itemId ->
+            actionPerformOnDevice(sidewalkDevice, itemId)
+        }
 
     private var progressDialog: ProgressDialog? = null
 
@@ -113,15 +114,19 @@ class ScanFragment : Fragment(R.layout.fragment_scan) {
         setHasOptionsMenu(true)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
-        val concatAdapter = ConcatAdapter().apply {
-            addAdapter(SectionAdapter(getString(R.string.unregistered_devices).uppercase()))
-            addAdapter(unregisterDeviceAdapter)
-            addAdapter(SectionAdapter(getString(R.string.registered_devices).uppercase()))
-            addAdapter(registerDeviceAdapter)
-        }
+        val concatAdapter =
+            ConcatAdapter().apply {
+                addAdapter(SectionAdapter(getString(R.string.unregistered_devices).uppercase()))
+                addAdapter(unregisterDeviceAdapter)
+                addAdapter(SectionAdapter(getString(R.string.registered_devices).uppercase()))
+                addAdapter(registerDeviceAdapter)
+            }
         view.findViewById<RecyclerView>(R.id.list).apply {
             adapter = concatAdapter
             layoutManager = LinearLayoutManager(context)
@@ -157,7 +162,10 @@ class ScanFragment : Fragment(R.layout.fragment_scan) {
         progressDialog?.dismiss()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater,
+    ) {
         inflater.inflate(R.menu.toolbar_action, menu)
         return super.onCreateOptionsMenu(menu, inflater)
     }
@@ -175,8 +183,8 @@ class ScanFragment : Fragment(R.layout.fragment_scan) {
             bleRuntimePermissionsLauncher.launch(
                 arrayOf(
                     Manifest.permission.BLUETOOTH_SCAN,
-                    Manifest.permission.BLUETOOTH_CONNECT
-                )
+                    Manifest.permission.BLUETOOTH_CONNECT,
+                ),
             )
         } else {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
@@ -189,31 +197,40 @@ class ScanFragment : Fragment(R.layout.fragment_scan) {
             locationPermissionsLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                ),
             )
         }
     }
 
-    private fun showMessage(title: String, message: String) {
-        AlertDialog.Builder(requireContext())
+    private fun showMessage(
+        title: String,
+        message: String,
+    ) {
+        AlertDialog
+            .Builder(requireContext())
             .setTitle(title)
             .setMessage(message)
             .setPositiveButton(android.R.string.ok, null)
             .show()
     }
 
-    private fun actionPerformOnDevice(sidewalkDevice: SidewalkDevice, action: Int) {
+    private fun actionPerformOnDevice(
+        sidewalkDevice: SidewalkDevice,
+        action: Int,
+    ) {
         when (action) {
             R.id.oobe_secure_channel, R.id.normal_secure_channel -> {
                 val isRegister =
                     sidewalkDevice.beaconInfo.deviceMode == BeaconInfo.DeviceMode.Normal
-                val bundle = bundleOf(
-                    ConnectionViewModel.ARG_REGISTERED to isRegister,
-                    ConnectionViewModel.ARG_SMSN to sidewalkDevice.truncatedSmsn
-                )
+                val bundle =
+                    bundleOf(
+                        ConnectionViewModel.ARG_REGISTERED to isRegister,
+                        ConnectionViewModel.ARG_SMSN to sidewalkDevice.truncatedSmsn,
+                    )
                 findNavController().navigate(
-                    R.id.action_dashBoardFragment_to_connectionViewFragment, bundle
+                    R.id.action_dashBoardFragment_to_connectionViewFragment,
+                    bundle,
                 )
             }
             R.id.oobe_register -> scanViewModel.registerDevice(sidewalkDevice.truncatedSmsn)
@@ -236,17 +253,18 @@ class ScanFragment : Fragment(R.layout.fragment_scan) {
                     }
                     is ScanEvent.Register -> {
                         progressDialog?.dismiss()
-                        progressDialog = ProgressDialog(requireContext()).apply {
-                            setMessage("Action ${event.smsn}")
-                            setCancelable(false)
-                            setButton(
-                                DialogInterface.BUTTON_NEGATIVE,
-                                getString(android.R.string.cancel)
-                            ) { dialog, _ ->
-                                dialog.dismiss()
-                                scanViewModel.cancelRegisterDevice()
+                        progressDialog =
+                            ProgressDialog(requireContext()).apply {
+                                setMessage("Action ${event.smsn}")
+                                setCancelable(false)
+                                setButton(
+                                    DialogInterface.BUTTON_NEGATIVE,
+                                    getString(android.R.string.cancel),
+                                ) { dialog, _ ->
+                                    dialog.dismiss()
+                                    scanViewModel.cancelRegisterDevice()
+                                }
                             }
-                        }
                         progressDialog?.show()
                     }
                 }
@@ -268,13 +286,13 @@ class ScanFragment : Fragment(R.layout.fragment_scan) {
                     is RegistrationDetail.RegistrationSucceeded -> {
                         showMessage(
                             getString(R.string.register),
-                            "Registration succeeded."
+                            "Registration succeeded.",
                         )
                     }
                     is RegistrationDetail.AlreadyRegistered -> {
                         showMessage(
                             getString(R.string.register),
-                            "Already registered."
+                            "Already registered.",
                         )
                     }
                 }

@@ -29,12 +29,15 @@ import com.amazon.sidewalk.device.BeaconInfo
 import com.amazon.sidewalk.device.SidewalkDevice
 import com.amazon.sidewalk.sample.R
 
-class DeviceAdapter(val action: DeviceAdapter.(SidewalkDevice, Int) -> Unit) :
-    RecyclerView.Adapter<DeviceAdapter.DeviceHolder>() {
-
+class DeviceAdapter(
+    val action: DeviceAdapter.(SidewalkDevice, Int) -> Unit,
+) : RecyclerView.Adapter<DeviceAdapter.DeviceHolder>() {
     private var dataSet = mutableListOf<SidewalkDevice>()
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceHolder {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): DeviceHolder {
         val itemView =
             LayoutInflater.from(parent.context).inflate(R.layout.item_device, parent, false)
         return DeviceHolder(itemView).also { holder ->
@@ -55,14 +58,18 @@ class DeviceAdapter(val action: DeviceAdapter.(SidewalkDevice, Int) -> Unit) :
         }
     }
 
-    override fun onBindViewHolder(holder: DeviceHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: DeviceHolder,
+        position: Int,
+    ) {
         val sidewalkDevice = dataSet[position]
-        holder.nameView.text = holder.itemView.context.getString(
-            R.string.device_information,
-            sidewalkDevice.name,
-            sidewalkDevice.endpointId,
-            sidewalkDevice.rssi
-        )
+        holder.nameView.text =
+            holder.itemView.context.getString(
+                R.string.device_information,
+                sidewalkDevice.name,
+                sidewalkDevice.endpointId,
+                sidewalkDevice.rssi,
+            )
     }
 
     override fun getItemCount() = dataSet.size
@@ -83,7 +90,9 @@ class DeviceAdapter(val action: DeviceAdapter.(SidewalkDevice, Int) -> Unit) :
         notifyDataSetChanged()
     }
 
-    class DeviceHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class DeviceHolder(
+        itemView: View,
+    ) : RecyclerView.ViewHolder(itemView) {
         val nameView = itemView.findViewById(R.id.deviceInfo) as TextView
     }
 }

@@ -28,25 +28,25 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.fragment.app.DialogFragment
 
 class DeregisterDialog private constructor() : DialogFragment() {
-
     companion object {
         @JvmStatic
-        fun newInstance(): DeregisterDialog {
-            return DeregisterDialog()
-        }
+        fun newInstance(): DeregisterDialog = DeregisterDialog()
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         val view: View = inflater.inflate(R.layout.fargment_deregister_dialog, container, false)
         dialog?.setCancelable(false)
         return view
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
         setupClickListeners(view)
     }
@@ -55,7 +55,7 @@ class DeregisterDialog private constructor() : DialogFragment() {
         super.onStart()
         dialog?.window?.setLayout(
             WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.WRAP_CONTENT
+            WindowManager.LayoutParams.WRAP_CONTENT,
         )
     }
 

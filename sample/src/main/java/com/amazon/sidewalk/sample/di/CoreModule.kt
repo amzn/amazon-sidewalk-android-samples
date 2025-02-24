@@ -27,15 +27,14 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import java.util.logging.Logger
-import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import java.util.logging.Logger
+import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
 @Module
 object CoreModule {
-
     @Singleton
     @Provides
     fun provideSidewalkProvider(
@@ -45,7 +44,9 @@ object CoreModule {
 
     @Singleton
     @Provides
-    fun provideContext(@ApplicationContext context: Context) = context
+    fun provideContext(
+        @ApplicationContext context: Context,
+    ) = context
 
     @Singleton
     @Provides
@@ -57,5 +58,7 @@ object CoreModule {
 
     @Singleton
     @Provides
-    fun provideRequestContext(@ApplicationContext context: Context) = RequestContext.create(context)
+    fun provideRequestContext(
+        @ApplicationContext context: Context,
+    ) = RequestContext.create(context)
 }

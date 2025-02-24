@@ -25,10 +25,10 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:7.2.1")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.31")
-        classpath("com.google.dagger:hilt-android-gradle-plugin:2.44")
-        classpath("androidx.navigation:navigation-safe-args-gradle-plugin:2.5.2")
+        classpath("com.android.tools.build:gradle:8.5.1")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.10")
+        classpath("com.google.dagger:hilt-android-gradle-plugin:2.52")
+        classpath("androidx.navigation:navigation-safe-args-gradle-plugin:2.7.7")
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle.kts files

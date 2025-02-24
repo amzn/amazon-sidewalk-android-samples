@@ -25,24 +25,30 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.amazon.sidewalk.sample.R
 
-class SectionAdapter(private val title: String) :
-    RecyclerView.Adapter<SectionAdapter.DeviceHolder>() {
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceHolder {
+class SectionAdapter(
+    private val title: String,
+) : RecyclerView.Adapter<SectionAdapter.DeviceHolder>() {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): DeviceHolder {
         val itemView =
             LayoutInflater.from(parent.context).inflate(R.layout.item_device_section, parent, false)
         return DeviceHolder(itemView)
     }
 
-    override fun onBindViewHolder(holder: DeviceHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: DeviceHolder,
+        position: Int,
+    ) {
         holder.nameView.text = title
     }
 
-    class DeviceHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class DeviceHolder(
+        itemView: View,
+    ) : RecyclerView.ViewHolder(itemView) {
         val nameView = itemView.findViewById(R.id.device_section) as TextView
     }
 
-    override fun getItemCount(): Int {
-        return 1
-    }
+    override fun getItemCount(): Int = 1
 }
