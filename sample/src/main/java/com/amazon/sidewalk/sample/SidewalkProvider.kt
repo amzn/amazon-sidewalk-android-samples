@@ -25,6 +25,6 @@ import com.amazon.sidewalk.authentication.SidewalkAuthProvider
 object SidewalkProvider {
     fun provide(
         context: Context,
-        authProvider: SidewalkAuthProvider
+        authProvider: SidewalkAuthProvider,
     ): Sidewalk = Sidewalk(context, authProvider)
 }

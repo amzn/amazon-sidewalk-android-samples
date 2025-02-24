@@ -32,38 +32,39 @@ import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class SidewalkAuthProviderImpl @Inject constructor(
-    private val context: Context,
-    private val logger: Logger
-) : SidewalkAuthProvider {
-    override suspend fun getToken(): SidewalkResult<String> {
-        return obtainLwaToken(context, logger)
-    }
+class SidewalkAuthProviderImpl
+    @Inject
+    constructor(
+        private val context: Context,
+        private val logger: Logger,
+    ) : SidewalkAuthProvider {
+        override suspend fun getToken(): SidewalkResult<String> = obtainLwaToken(context, logger)
 
-    private suspend fun obtainLwaToken(
-        context: Context,
-        logger: Logger
-    ): SidewalkResult<String> = suspendCoroutine { continuation ->
-        val scopes = arrayOf(ScopeFactory.scopeNamed("sidewalk::manage_endpoint"))
-        AuthorizationManager.getToken(
-            context,
-            scopes,
-            object : Listener<AuthorizeResult, AuthError> {
-                override fun onSuccess(result: AuthorizeResult) {
-                    result.accessToken?.let {
-                        logger.log(Level.INFO, "We have the LWA token")
-                        continuation.resume(SidewalkResult.Success(it))
-                    } ?: run {
-                        logger.log(Level.INFO, "No accessToken found")
-                        continuation.resume(SidewalkResult.Failure())
-                    }
-                }
+        private suspend fun obtainLwaToken(
+            context: Context,
+            logger: Logger,
+        ): SidewalkResult<String> =
+            suspendCoroutine { continuation ->
+                val scopes = arrayOf(ScopeFactory.scopeNamed("sidewalk::manage_endpoint"))
+                AuthorizationManager.getToken(
+                    context,
+                    scopes,
+                    object : Listener<AuthorizeResult, AuthError> {
+                        override fun onSuccess(result: AuthorizeResult) {
+                            result.accessToken?.let {
+                                logger.log(Level.INFO, "We have the LWA token")
+                                continuation.resume(SidewalkResult.Success(it))
+                            } ?: run {
+                                logger.log(Level.INFO, "No accessToken found")
+                                continuation.resume(SidewalkResult.Failure())
+                            }
+                        }
 
-                override fun onError(ae: AuthError) {
-                    logger.log(Level.SEVERE, "Error: the user is not signed in, e=$ae")
-                    continuation.resume(SidewalkResult.Failure(ae))
-                }
+                        override fun onError(ae: AuthError) {
+                            logger.log(Level.SEVERE, "Error: the user is not signed in, e=$ae")
+                            continuation.resume(SidewalkResult.Failure(ae))
+                        }
+                    },
+                )
             }
-        )
     }
-}

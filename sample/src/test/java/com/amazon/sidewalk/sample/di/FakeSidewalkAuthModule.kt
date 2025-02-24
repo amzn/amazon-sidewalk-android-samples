@@ -28,12 +28,10 @@ import javax.inject.Singleton
 @Module
 @TestInstallIn(
     components = [SingletonComponent::class],
-    replaces = [SidewalkAuthModule::class]
+    replaces = [SidewalkAuthModule::class],
 )
 abstract class FakeSidewalkAuthModule {
     @Binds
     @Singleton
-    abstract fun bindSidewalkAuthProvider(
-        fakeSidewalkAuthProviderImpl: FakeSidewalkAuthProviderImpl
-    ): SidewalkAuthProvider
+    abstract fun bindSidewalkAuthProvider(fakeSidewalkAuthProviderImpl: FakeSidewalkAuthProviderImpl): SidewalkAuthProvider
 }

@@ -32,92 +32,94 @@ import com.amazon.sidewalk.Sidewalk
 import com.amazon.sidewalk.authentication.SidewalkAuthProvider
 import com.amazon.sidewalk.result.SidewalkResult
 import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 import kotlin.coroutines.Continuation
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
-class AccountSettingRepository @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val requestContext: RequestContext,
-    private val sidewalk: Sidewalk,
-    private val authProvider: SidewalkAuthProvider,
-    private val ioDispatcher: CoroutineDispatcher
-) {
-    suspend fun requestLwaToken(): SidewalkResult<String> {
-        return withContext(ioDispatcher) {
-            authProvider.getToken()
-        }
-    }
-
-    private val authorizeListener by lazy {
-        object : AuthorizeListener() {
-            override fun onSuccess(result: AuthorizeResult) {
-                loginContinuation?.resume(SidewalkResult.Success(Unit))
-                unregisterListener()
+class AccountSettingRepository
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+        private val requestContext: RequestContext,
+        private val sidewalk: Sidewalk,
+        private val authProvider: SidewalkAuthProvider,
+        private val ioDispatcher: CoroutineDispatcher,
+    ) {
+        suspend fun requestLwaToken(): SidewalkResult<String> =
+            withContext(ioDispatcher) {
+                authProvider.getToken()
             }
 
-            override fun onError(error: AuthError) {
-                loginContinuation?.resume(SidewalkResult.Failure(error))
-                unregisterListener()
-            }
-
-            override fun onCancel(cancellation: AuthCancellation?) {
-                val description = cancellation?.description
-                loginContinuation?.resume(SidewalkResult.Failure(CancellationException(description)))
-                unregisterListener()
-            }
-        }
-    }
-
-    private var loginContinuation: Continuation<SidewalkResult<Unit>>? = null
-
-    suspend fun login(): SidewalkResult<Unit> = suspendCoroutine { cont ->
-        loginContinuation = cont
-        requestContext.registerListener(authorizeListener)
-        AuthorizationManager.authorize(
-            AuthorizeRequest.Builder(requestContext)
-                .addScopes(ScopeFactory.scopeNamed("sidewalk::manage_endpoint"))
-                .shouldReturnUserData(false)
-                .build()
-        )
-    }
-
-    suspend fun logout(): SidewalkResult<Unit> {
-        return withContext(ioDispatcher) {
-            // Clear SDK internal cache
-            sidewalk.clearAccountCache()
-
-            suspendCoroutine { cont ->
-                val listener = object : Listener<Void?, AuthError> {
-                    override fun onSuccess(response: Void?) {
-                        cont.resume(SidewalkResult.Success(Unit))
-                    }
-
-                    override fun onError(error: AuthError) {
-                        cont.resume(SidewalkResult.Failure(error))
-                    }
+        private val authorizeListener by lazy {
+            object : AuthorizeListener() {
+                override fun onSuccess(result: AuthorizeResult) {
+                    loginContinuation?.resume(SidewalkResult.Success(Unit))
+                    unregisterListener()
                 }
-                AuthorizationManager.signOut(context, listener)
+
+                override fun onError(error: AuthError) {
+                    loginContinuation?.resume(SidewalkResult.Failure(error))
+                    unregisterListener()
+                }
+
+                override fun onCancel(cancellation: AuthCancellation?) {
+                    val description = cancellation?.description
+                    loginContinuation?.resume(SidewalkResult.Failure(CancellationException(description)))
+                    unregisterListener()
+                }
             }
         }
-    }
 
-    suspend fun deregisterDevice(smsn: String): SidewalkResult<Unit> {
-        return withContext(ioDispatcher) {
-            sidewalk.deregisterDevice(smsn, true)
+        private var loginContinuation: Continuation<SidewalkResult<Unit>>? = null
+
+        suspend fun login(): SidewalkResult<Unit> =
+            suspendCoroutine { cont ->
+                loginContinuation = cont
+                requestContext.registerListener(authorizeListener)
+                AuthorizationManager.authorize(
+                    AuthorizeRequest
+                        .Builder(requestContext)
+                        .addScopes(ScopeFactory.scopeNamed("sidewalk::manage_endpoint"))
+                        .shouldReturnUserData(false)
+                        .build(),
+                )
+            }
+
+        suspend fun logout(): SidewalkResult<Unit> =
+            withContext(ioDispatcher) {
+                // Clear SDK internal cache
+                sidewalk.clearAccountCache()
+
+                suspendCoroutine { cont ->
+                    val listener =
+                        object : Listener<Void?, AuthError> {
+                            override fun onSuccess(response: Void?) {
+                                cont.resume(SidewalkResult.Success(Unit))
+                            }
+
+                            override fun onError(error: AuthError) {
+                                cont.resume(SidewalkResult.Failure(error))
+                            }
+                        }
+                    AuthorizationManager.signOut(context, listener)
+                }
+            }
+
+        suspend fun deregisterDevice(smsn: String): SidewalkResult<Unit> =
+            withContext(ioDispatcher) {
+                sidewalk.deregisterDevice(smsn, true)
+            }
+
+        fun clear() {
+            unregisterListener()
+        }
+
+        private fun unregisterListener() {
+            loginContinuation = null
+            requestContext.unregisterListener(authorizeListener)
         }
     }
-
-    fun clear() {
-        unregisterListener()
-    }
-
-    private fun unregisterListener() {
-        loginContinuation = null
-        requestContext.unregisterListener(authorizeListener)
-    }
-}

@@ -33,200 +33,237 @@ import javax.inject.Inject
 
 sealed class CoverageTestUiState {
     object Idle : CoverageTestUiState()
-    class Loading(val event: CoverageTestEvent) : CoverageTestUiState()
-    class TestProgress(val eventTimeMs: Long, val maxTime: Long) : CoverageTestUiState()
+
+    class Loading(
+        val event: CoverageTestEvent,
+    ) : CoverageTestUiState()
+
+    class TestProgress(
+        val eventTimeMs: Long,
+        val maxTime: Long,
+    ) : CoverageTestUiState()
+
     object InProgress : CoverageTestUiState()
-    class ReportFetched(val data: SidewalkCoverageTestReport) : CoverageTestUiState()
+
+    class ReportFetched(
+        val data: SidewalkCoverageTestReport,
+    ) : CoverageTestUiState()
+
     object Connected : CoverageTestUiState()
-    class Disconnected(val event: CoverageTestEvent) : CoverageTestUiState()
+
+    class Disconnected(
+        val event: CoverageTestEvent,
+    ) : CoverageTestUiState()
+
     object TestCompleted : CoverageTestUiState()
-    class Failure(val event: CoverageTestEvent, val exception: Throwable?) : CoverageTestUiState()
+
+    class Failure(
+        val event: CoverageTestEvent,
+        val exception: Throwable?,
+    ) : CoverageTestUiState()
 }
 
 sealed class CoverageTestEvent {
     object Start : CoverageTestEvent()
+
     object Stop : CoverageTestEvent()
+
     object Report : CoverageTestEvent()
-    class Connect(smsn: String) : CoverageTestEvent()
+
+    class Connect(
+        smsn: String,
+    ) : CoverageTestEvent()
+
     object Disconnect : CoverageTestEvent()
+
     object Subscribe : CoverageTestEvent()
 }
 
 @HiltViewModel
-class CoverageTestViewModel @Inject constructor(
-    private val connectionRepository: ConnectionRepository,
-) : ViewModel() {
+class CoverageTestViewModel
+    @Inject
+    constructor(
+        private val connectionRepository: ConnectionRepository,
+    ) : ViewModel() {
+        private val _uiState =
+            MutableStateFlow<CoverageTestUiState>(CoverageTestUiState.Idle)
+        val uiState: StateFlow<CoverageTestUiState> = _uiState.asStateFlow()
 
-    private val _uiState =
-        MutableStateFlow<CoverageTestUiState>(CoverageTestUiState.Idle)
-    val uiState: StateFlow<CoverageTestUiState> = _uiState.asStateFlow()
+        private var sidewalkConnection: SidewalkConnection? = null
+        private var timer: CountDownTimer? = null
+        private var totalTestDuration: Long = 0
 
-    private var sidewalkConnection: SidewalkConnection? = null
-    private var timer: CountDownTimer? = null
-    private var totalTestDuration: Long = 0
-
-    fun startCoverageTest(
-        pingInterval: Int,
-        testDuration: Int,
-        progressMode: Boolean
-    ) {
-        viewModelScope.launch {
-            sidewalkConnection?.let { connection ->
-                _uiState.update {
-                    CoverageTestUiState.Loading(event = CoverageTestEvent.Start)
-                }
-                connectionRepository.startCoverageTest(
-                    connection,
-                    pingInterval,
-                    testDuration,
-                    progressMode
-                ).collect { result ->
-                    val newUiState = when (result) {
-                        is SidewalkResult.Success -> {
-                            handleCoverageTestEvent(result.value)
+        fun startCoverageTest(
+            pingInterval: Int,
+            testDuration: Int,
+            progressMode: Boolean,
+        ) {
+            viewModelScope.launch {
+                sidewalkConnection?.let { connection ->
+                    _uiState.update {
+                        CoverageTestUiState.Loading(event = CoverageTestEvent.Start)
+                    }
+                    connectionRepository
+                        .startCoverageTest(
+                            connection,
+                            pingInterval,
+                            testDuration,
+                            progressMode,
+                        ).collect { result ->
+                            val newUiState =
+                                when (result) {
+                                    is SidewalkResult.Success -> {
+                                        handleCoverageTestEvent(result.value)
+                                    }
+                                    is SidewalkResult.Failure -> {
+                                        CoverageTestUiState.Failure(
+                                            CoverageTestEvent.Start,
+                                            result.exception,
+                                        )
+                                    }
+                                }
+                            _uiState.update { newUiState }
                         }
-                        is SidewalkResult.Failure -> {
-                            CoverageTestUiState.Failure(
-                                CoverageTestEvent.Start, result.exception
-                            )
+                }
+            }
+        }
+
+        fun stopCoverageTest() {
+            viewModelScope.launch {
+                timer?.cancel()
+                sidewalkConnection?.let { connection ->
+                    _uiState.update {
+                        CoverageTestUiState.Loading(event = CoverageTestEvent.Stop)
+                    }
+                    connectionRepository.stopCoverageTest(connection)
+                    _uiState.update {
+                        CoverageTestUiState.TestCompleted
+                    }
+                }
+            }
+        }
+
+        private fun countDownTime(testDurationInSec: Int) {
+            timer =
+                object : CountDownTimer((testDurationInSec * 1000).toLong(), 1000) {
+                    override fun onTick(millisUntilFinished: Long) {
+                        _uiState.update {
+                            CoverageTestUiState.TestProgress(millisUntilFinished, totalTestDuration)
                         }
                     }
-                    _uiState.update { newUiState }
+
+                    override fun onFinish() {
+                        _uiState.update {
+                            CoverageTestUiState.TestCompleted
+                        }
+                    }
                 }
-            }
+            timer?.start()
         }
-    }
 
-    fun stopCoverageTest() {
-        viewModelScope.launch {
-            timer?.cancel()
-            sidewalkConnection?.let { connection ->
-                _uiState.update {
-                    CoverageTestUiState.Loading(event = CoverageTestEvent.Stop)
+        private fun handleCoverageTestEvent(event: SidewalkCoverageTestEvent): CoverageTestUiState =
+            when (event) {
+                is SidewalkCoverageTestEvent.CollectingReport -> {
+                    CoverageTestUiState.Loading(CoverageTestEvent.Report)
                 }
-                connectionRepository.stopCoverageTest(connection)
-                _uiState.update {
-                    CoverageTestUiState.TestCompleted
+                is SidewalkCoverageTestEvent.PingEvent -> {
+                    Log.i(
+                        "SidewalkCoverageTestEvent",
+                        "PingTime: ${event.eventTimeMs}",
+                    )
+                    CoverageTestUiState.Idle
+                }
+                is SidewalkCoverageTestEvent.PongEvent -> {
+                    Log.i("SidewalkCoverageTestEvent", "Pong Time: ${event.eventTimeMs}")
+                    CoverageTestUiState.Idle
+                }
+                is SidewalkCoverageTestEvent.MissingPongEvent -> {
+                    Log.i("SidewalkCoverageTestEvent", "Missed Pong Time: ${event.eventTimeMs}")
+                    CoverageTestUiState.Idle
+                }
+                is SidewalkCoverageTestEvent.TestReportEvent -> {
+                    CoverageTestUiState.ReportFetched(event.data)
+                }
+                is SidewalkCoverageTestEvent.TestStart -> {
+                    totalTestDuration = (event.testDuration * 1000).toLong()
+                    countDownTime(event.testDuration)
+                    CoverageTestUiState.InProgress
                 }
             }
-        }
-    }
 
-    private fun countDownTime(testDurationInSec: Int) {
-        timer = object : CountDownTimer((testDurationInSec * 1000).toLong(), 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                _uiState.update {
-                    CoverageTestUiState.TestProgress(millisUntilFinished, totalTestDuration)
-                }
-            }
-
-            override fun onFinish() {
-                _uiState.update {
-                    CoverageTestUiState.TestCompleted
-                }
-            }
-        }
-        timer?.start()
-    }
-
-    private fun handleCoverageTestEvent(event: SidewalkCoverageTestEvent): CoverageTestUiState {
-        return when (event) {
-            is SidewalkCoverageTestEvent.CollectingReport -> {
-                CoverageTestUiState.Loading(CoverageTestEvent.Report)
-            }
-            is SidewalkCoverageTestEvent.PingEvent -> {
-                Log.i(
-                    "SidewalkCoverageTestEvent",
-                    "PingTime: ${event.eventTimeMs}"
-                )
-                CoverageTestUiState.Idle
-            }
-            is SidewalkCoverageTestEvent.PongEvent -> {
-                Log.i("SidewalkCoverageTestEvent", "Pong Time: ${event.eventTimeMs}")
-                CoverageTestUiState.Idle
-            }
-            is SidewalkCoverageTestEvent.MissingPongEvent -> {
-                Log.i("SidewalkCoverageTestEvent", "Missed Pong Time: ${event.eventTimeMs}")
-                CoverageTestUiState.Idle
-            }
-            is SidewalkCoverageTestEvent.TestReportEvent -> {
-                CoverageTestUiState.ReportFetched(event.data)
-            }
-            is SidewalkCoverageTestEvent.TestStart -> {
-                totalTestDuration = (event.testDuration * 1000).toLong()
-                countDownTime(event.testDuration)
-                CoverageTestUiState.InProgress
-            }
-        }
-    }
-
-    fun establishSecureConnect(smsn: String) {
-        viewModelScope.launch {
-            _uiState.update {
-                CoverageTestUiState.Loading(
-                    CoverageTestEvent.Connect(smsn)
-                )
-            }
-            val newUiState = when (
-                val result = connectionRepository.establishSecureConnect(smsn)
-            ) {
-                is SidewalkResult.Success -> {
-                    sidewalkConnection = result.value
-                    subscribe()
-                    CoverageTestUiState.Connected
-                }
-                is SidewalkResult.Failure -> CoverageTestUiState.Failure(
-                    CoverageTestEvent.Connect(smsn),
-                    result.exception
-                )
-            }
-            _uiState.update { newUiState }
-        }
-    }
-
-    fun disconnectSecureConnection() {
-        viewModelScope.launch {
-            sidewalkConnection?.let { connection ->
+        fun establishSecureConnect(smsn: String) {
+            viewModelScope.launch {
                 _uiState.update {
                     CoverageTestUiState.Loading(
-                        CoverageTestEvent.Disconnect
+                        CoverageTestEvent.Connect(smsn),
                     )
                 }
-                val newUiState = when (
-                    val result = connectionRepository.disconnectSecureConnect(connection)
-                ) {
-                    is SidewalkResult.Success -> {
-                        CoverageTestUiState.Disconnected(CoverageTestEvent.Stop)
+                val newUiState =
+                    when (
+                        val result = connectionRepository.establishSecureConnect(smsn)
+                    ) {
+                        is SidewalkResult.Success -> {
+                            sidewalkConnection = result.value
+                            subscribe()
+                            CoverageTestUiState.Connected
+                        }
+                        is SidewalkResult.Failure ->
+                            CoverageTestUiState.Failure(
+                                CoverageTestEvent.Connect(smsn),
+                                result.exception,
+                            )
                     }
-                    is SidewalkResult.Failure -> CoverageTestUiState.Failure(
-                        CoverageTestEvent.Disconnect,
-                        result.exception
-                    )
-                }
                 _uiState.update { newUiState }
             }
         }
-    }
 
-    private fun subscribe() {
-        viewModelScope.launch {
-            sidewalkConnection?.let { connection ->
-                connectionRepository.subscribe(connection).collect { result ->
-                    val newUiState = when (result) {
-                        is SidewalkResult.Success -> CoverageTestUiState.Idle
-                        is SidewalkResult.Failure -> CoverageTestUiState.Failure(
-                            CoverageTestEvent.Subscribe,
-                            result.exception
+        fun disconnectSecureConnection() {
+            viewModelScope.launch {
+                sidewalkConnection?.let { connection ->
+                    _uiState.update {
+                        CoverageTestUiState.Loading(
+                            CoverageTestEvent.Disconnect,
                         )
                     }
+                    val newUiState =
+                        when (
+                            val result = connectionRepository.disconnectSecureConnect(connection)
+                        ) {
+                            is SidewalkResult.Success -> {
+                                CoverageTestUiState.Disconnected(CoverageTestEvent.Stop)
+                            }
+                            is SidewalkResult.Failure ->
+                                CoverageTestUiState.Failure(
+                                    CoverageTestEvent.Disconnect,
+                                    result.exception,
+                                )
+                        }
                     _uiState.update { newUiState }
                 }
             }
         }
-    }
 
-    override fun onCleared() {
-        super.onCleared()
-        sidewalkConnection = null
+        private fun subscribe() {
+            viewModelScope.launch {
+                sidewalkConnection?.let { connection ->
+                    connectionRepository.subscribe(connection).collect { result ->
+                        val newUiState =
+                            when (result) {
+                                is SidewalkResult.Success -> CoverageTestUiState.Idle
+                                is SidewalkResult.Failure ->
+                                    CoverageTestUiState.Failure(
+                                        CoverageTestEvent.Subscribe,
+                                        result.exception,
+                                    )
+                            }
+                        _uiState.update { newUiState }
+                    }
+                }
+            }
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+            sidewalkConnection = null
+        }
     }
-}

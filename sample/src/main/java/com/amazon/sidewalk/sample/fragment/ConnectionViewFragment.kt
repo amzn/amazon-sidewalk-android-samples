@@ -56,7 +56,6 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
-
     private val connectionViewModel by viewModels<ConnectionViewModel>()
 
     private var progressDialog: ProgressDialog? = null
@@ -70,7 +69,10 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
         setHasOptionsMenu(true)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
         editText = view.findViewById(R.id.editText)
         subscribeList = view.findViewById(R.id.subscribeList)
@@ -84,8 +86,8 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
             addItemDecoration(
                 DividerItemDecoration(
                     requireContext(),
-                    DividerItemDecoration.VERTICAL
-                )
+                    DividerItemDecoration.VERTICAL,
+                ),
             )
         }
 
@@ -101,7 +103,10 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater,
+    ) {
         super.onCreateOptionsMenu(menu, inflater)
         menu.clear()
     }
@@ -116,7 +121,7 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
             registerButton.isClickable = false
             ViewCompat.setBackgroundTintList(
                 registerButton,
-                context?.let { ContextCompat.getColorStateList(it, android.R.color.darker_gray) }
+                context?.let { ContextCompat.getColorStateList(it, android.R.color.darker_gray) },
             )
         }
     }
@@ -131,10 +136,11 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
     }
 
     private fun write() {
-        val message = SidewalkMessage(
-            editText.text.toString().toByteArray(),
-            MessageDescriptor(MessageType.Get)
-        )
+        val message =
+            SidewalkMessage(
+                editText.text.toString().toByteArray(),
+                MessageDescriptor(MessageType.Get),
+            )
         connectionViewModel.write(message)
     }
 
@@ -146,7 +152,8 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
     }
 
     private fun showMessage(message: String) {
-        AlertDialog.Builder(requireContext())
+        AlertDialog
+            .Builder(requireContext())
             .setMessage(message)
             .setPositiveButton(android.R.string.ok, null)
             .show()
@@ -154,17 +161,17 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
 
     private fun showMessageAndNavigateToPreviousScreen(
         message: String,
-        isRegisterSuccess: Boolean = false
+        isRegisterSuccess: Boolean = false,
     ) {
-        AlertDialog.Builder(requireContext())
+        AlertDialog
+            .Builder(requireContext())
             .setMessage(message)
             .setCancelable(false)
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 navigateToPreviousScreen(
-                    isRegisterSuccess
+                    isRegisterSuccess,
                 )
-            }
-            .show()
+            }.show()
     }
 
     private fun navigateToPreviousScreen(isRegisterSuccess: Boolean) {
@@ -176,16 +183,17 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
         when (uiState) {
             is ConnectionUiState.Idle -> Unit
             is ConnectionUiState.Loading -> {
-                progressDialog = ProgressDialog(requireContext()).apply {
-                    setMessage("Action ${uiState.event.message}")
-                    setCancelable(false)
-                    setButton(
-                        DialogInterface.BUTTON_NEGATIVE,
-                        getString(android.R.string.cancel)
-                    ) { dialog, _ ->
-                        dialog.dismiss()
+                progressDialog =
+                    ProgressDialog(requireContext()).apply {
+                        setMessage("Action ${uiState.event.message}")
+                        setCancelable(false)
+                        setButton(
+                            DialogInterface.BUTTON_NEGATIVE,
+                            getString(android.R.string.cancel),
+                        ) { dialog, _ ->
+                            dialog.dismiss()
+                        }
                     }
-                }
                 progressDialog?.show()
             }
             is ConnectionUiState.Connected -> {
@@ -197,10 +205,11 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
 
                 when (uiState.registrationDetail) {
                     is RegistrationDetail.RegistrationSucceeded -> {
-                        val message = """
+                        val message =
+                            """
                             Register succeeded after establishing a secure channel,
                             Start re-scanning devices.
-                        """.trimIndent()
+                            """.trimIndent()
                         showMessageAndNavigateToPreviousScreen(message, isRegisterSuccess = true)
                     }
                     is RegistrationDetail.AlreadyRegistered -> {
@@ -230,11 +239,11 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
                 when (uiState.event) {
                     is ConnectionEvent.Connect ->
                         showMessageAndNavigateToPreviousScreen(
-                            "Establish secure channel failed, message=$message"
+                            "Establish secure channel failed, message=$message",
                         )
                     is ConnectionEvent.Register ->
                         showMessage(
-                            "Register failed after establishing a secure channel, message=$message"
+                            "Register failed after establishing a secure channel, message=$message",
                         )
                     is ConnectionEvent.Write ->
                         showMessage("User write message failed, message=$message")
@@ -242,7 +251,7 @@ class ConnectionViewFragment : Fragment(R.layout.fragment_connectionview) {
                         showMessage("Subscribe failed, message=$message")
                     is ConnectionEvent.Disconnect ->
                         showMessageAndNavigateToPreviousScreen(
-                            "Disconnect secure channel failed, message=$message"
+                            "Disconnect secure channel failed, message=$message",
                         )
                 }
             }

@@ -24,8 +24,9 @@ import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class SidewalkApplication : Application() {
-
-    init { instance = this }
+    init {
+        instance = this
+    }
 
     companion object {
         private var instance: SidewalkApplication? = null

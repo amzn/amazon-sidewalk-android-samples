@@ -26,14 +26,16 @@ import org.hamcrest.TypeSafeDiagnosingMatcher
 class RecyclerViewMatcher(
     private val resId: Int,
     private val childPosition: Int,
-    private val childResId: Int
+    private val childResId: Int,
 ) : TypeSafeDiagnosingMatcher<View>() {
-
     override fun describeTo(description: Description) {
         description.appendText("RecyclerView(id=$resId)'s child at position $childPosition")
     }
 
-    override fun matchesSafely(view: View, mismatchDescription: Description): Boolean {
+    override fun matchesSafely(
+        view: View,
+        mismatchDescription: Description,
+    ): Boolean {
         val recyclerView = view.rootView.findViewById<View>(resId)
         if (recyclerView == null || recyclerView !is RecyclerView) {
             mismatchDescription.appendText("RecyclerView isn't founded")
@@ -59,7 +61,5 @@ class RecyclerViewMatcher(
 fun withRecyclerViewAtPosition(
     recyclerViewResId: Int,
     childPosition: Int,
-    childResId: Int = -1
-): RecyclerViewMatcher {
-    return RecyclerViewMatcher(recyclerViewResId, childPosition, childResId)
-}
+    childResId: Int = -1,
+): RecyclerViewMatcher = RecyclerViewMatcher(recyclerViewResId, childPosition, childResId)

@@ -46,7 +46,10 @@ class CoverageTestInProgressFragment : Fragment(R.layout.fragment_coverage_test_
     private var progressDialog: ProgressDialog? = null
     private var errorDialog: AlertDialog? = null
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
         progressTimer = view.findViewById(R.id.progress_timer)
         handleOnBackPress()
@@ -83,15 +86,17 @@ class CoverageTestInProgressFragment : Fragment(R.layout.fragment_coverage_test_
     private fun showHideProgressDialog(state: CoverageTestUiState) {
         progressDialog?.dismiss()
         if (state is CoverageTestUiState.Loading) {
-            val message = when (state.event) {
-                is CoverageTestEvent.Stop -> getString(R.string.stopping_coverage_test)
-                is CoverageTestEvent.Disconnect -> getString(R.string.disconnecting)
-                else -> getString(R.string.please_wait)
-            }
-            progressDialog = ProgressDialog(requireContext()).apply {
-                setMessage(message)
-                setCancelable(false)
-            }
+            val message =
+                when (state.event) {
+                    is CoverageTestEvent.Stop -> getString(R.string.stopping_coverage_test)
+                    is CoverageTestEvent.Disconnect -> getString(R.string.disconnecting)
+                    else -> getString(R.string.please_wait)
+                }
+            progressDialog =
+                ProgressDialog(requireContext()).apply {
+                    setMessage(message)
+                    setCancelable(false)
+                }
             progressDialog?.show()
         }
     }
@@ -103,12 +108,14 @@ class CoverageTestInProgressFragment : Fragment(R.layout.fragment_coverage_test_
     }
 
     private fun showErrorDialog(message: String?) {
-        errorDialog = AlertDialog.Builder(requireContext())
-            .setTitle(getString(R.string.error))
-            .setMessage(message)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                findNavController().navigate(R.id.action_global_dashBoardFragment)
-            }.show()
+        errorDialog =
+            AlertDialog
+                .Builder(requireContext())
+                .setTitle(getString(R.string.error))
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    findNavController().navigate(R.id.action_global_dashBoardFragment)
+                }.show()
     }
 
     override fun onDestroyView() {

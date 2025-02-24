@@ -41,7 +41,6 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class CoverageTestStartFragment : Fragment(R.layout.fragment_coverage_test_start) {
-
     private val covTestViewModel by hiltNavGraphViewModels<CoverageTestViewModel>(R.id.navigation_coverage_test)
     private val args: CoverageTestStartFragmentArgs by navArgs()
 
@@ -51,7 +50,10 @@ class CoverageTestStartFragment : Fragment(R.layout.fragment_coverage_test_start
     private lateinit var btnStartCoverageTest: Button
     private var errorDialog: AlertDialog? = null
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
         initUI(view)
         viewLifecycleOwner.lifecycleScope.launch {
@@ -83,15 +85,17 @@ class CoverageTestStartFragment : Fragment(R.layout.fragment_coverage_test_start
         when (state) {
             is CoverageTestUiState.Idle -> Unit
             is CoverageTestUiState.Loading -> {
-                val message = when (state.event) {
-                    is CoverageTestEvent.Connect -> getString(R.string.connecting)
-                    is CoverageTestEvent.Start -> getString(R.string.starting_coverage_test)
-                    else -> getString(R.string.please_wait)
-                }
-                progressDialog = ProgressDialog(requireContext()).apply {
-                    setMessage(message)
-                    setCancelable(false)
-                }
+                val message =
+                    when (state.event) {
+                        is CoverageTestEvent.Connect -> getString(R.string.connecting)
+                        is CoverageTestEvent.Start -> getString(R.string.starting_coverage_test)
+                        else -> getString(R.string.please_wait)
+                    }
+                progressDialog =
+                    ProgressDialog(requireContext()).apply {
+                        setMessage(message)
+                        setCancelable(false)
+                    }
                 progressDialog?.show()
             }
             is CoverageTestUiState.Connected -> {
@@ -121,13 +125,14 @@ class CoverageTestStartFragment : Fragment(R.layout.fragment_coverage_test_start
                 it.dismiss()
             }
         }
-        errorDialog = AlertDialog.Builder(requireContext())
-            .setTitle(getString(R.string.error))
-            .setMessage(message)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                findNavController().navigateUp()
-            }
-            .show()
+        errorDialog =
+            AlertDialog
+                .Builder(requireContext())
+                .setTitle(getString(R.string.error))
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    findNavController().navigateUp()
+                }.show()
     }
 
     override fun onDestroyView() {

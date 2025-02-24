@@ -54,7 +54,6 @@ import dagger.hilt.android.testing.UninstallModules
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Before
@@ -63,39 +62,43 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDialog
+import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 @UninstallModules(SidewalkAuthModule::class)
 @HiltAndroidTest
 @Config(application = HiltTestApplication::class)
 class ConnectionViewFragmentTest {
-
     @get:Rule(order = 0)
     var hiltRule = HiltAndroidRule(this)
 
-    private val connection = mockk<SidewalkConnection>(relaxed = true) {
-        every { subscribe() } returns flowOf(
-            SidewalkResult.Success(
-                SidewalkMessage(
-                    byteArrayOf(0x01, 0x02, 0x03),
-                    MessageDescriptor(MessageType.Notify, 1)
+    private val connection =
+        mockk<SidewalkConnection>(relaxed = true) {
+            every { subscribe() } returns
+                flowOf(
+                    SidewalkResult.Success(
+                        SidewalkMessage(
+                            byteArrayOf(0x01, 0x02, 0x03),
+                            MessageDescriptor(MessageType.Notify, 1),
+                        ),
+                    ),
+                    SidewalkResult.Success(
+                        SidewalkMessage(
+                            byteArrayOf(0x11, 0x12, 0x13, 0x14),
+                            MessageDescriptor(MessageType.Notify, 2),
+                        ),
+                    ),
                 )
-            ),
-            SidewalkResult.Success(
-                SidewalkMessage(
-                    byteArrayOf(0x11, 0x12, 0x13, 0x14),
-                    MessageDescriptor(MessageType.Notify, 2)
+            coEvery { write(any()) } returns SidewalkResult.Success(Unit)
+        }
+    private val sidewalk =
+        mockk<Sidewalk> {
+            coEvery { secureConnectDevice(any<String>()) } returns SidewalkResult.Success(connection)
+            coEvery { registerDevice(any<SidewalkConnection>()) } returns
+                SidewalkResult.Success(
+                    RegistrationDetail.RegistrationSucceeded,
                 )
-            )
-        )
-        coEvery { write(any()) } returns SidewalkResult.Success(Unit)
-    }
-    private val sidewalk = mockk<Sidewalk> {
-        coEvery { secureConnectDevice(any<String>()) } returns SidewalkResult.Success(connection)
-        coEvery { registerDevice(any<SidewalkConnection>()) } returns SidewalkResult.Success(
-            RegistrationDetail.RegistrationSucceeded
-        )
-    }
+        }
 
     @BindValue
     @JvmField
@@ -111,20 +114,20 @@ class ConnectionViewFragmentTest {
     @Test
     fun `Launch ConnectionViewFragment with unregistered device, then views are initialized`() {
         launchFragmentInHiltContainer<ConnectionViewFragment>(
-            fragmentArgs = bundleOf(ConnectionViewModel.ARG_SMSN to smsn)
+            fragmentArgs = bundleOf(ConnectionViewModel.ARG_SMSN to smsn),
         ) {
             onView(withId(R.id.messageHeader)).check(
-                matches(withText(getString(R.string.subscribe_msg_header, smsn)))
+                matches(withText(getString(R.string.subscribe_msg_header, smsn))),
             )
             onView(withId(R.id.registerButton)).apply {
                 check(matches(isEnabled()))
                 check(matches(isClickable()))
             }
             onView(withRecyclerViewAtPosition(R.id.subscribeList, 0, R.id.contentInfo)).check(
-                matches(withSubstring("010203"))
+                matches(withSubstring("010203")),
             )
             onView(withRecyclerViewAtPosition(R.id.subscribeList, 1, R.id.contentInfo)).check(
-                matches(withSubstring("11121314"))
+                matches(withSubstring("11121314")),
             )
         }
     }
@@ -132,7 +135,7 @@ class ConnectionViewFragmentTest {
     @Test
     fun `Launch ConnectionViewFragment, then write a message`() {
         launchFragmentInHiltContainer<ConnectionViewFragment>(
-            fragmentArgs = bundleOf(ConnectionViewModel.ARG_SMSN to smsn)
+            fragmentArgs = bundleOf(ConnectionViewModel.ARG_SMSN to smsn),
         ) {
             onView(withId(R.id.editText)).perform(typeText("sidewalk"))
             onView(withId(R.id.writeButton)).perform(click())
@@ -143,7 +146,7 @@ class ConnectionViewFragmentTest {
     @Test
     fun `Launch ConnectionViewFragment with unregistered device, then register it through connection`() {
         launchFragmentInHiltContainer<ConnectionViewFragment>(
-            fragmentArgs = bundleOf(ConnectionViewModel.ARG_SMSN to smsn)
+            fragmentArgs = bundleOf(ConnectionViewModel.ARG_SMSN to smsn),
         ) {
             onView(withId(R.id.registerButton)).apply {
                 check(matches(isEnabled()))
@@ -162,10 +165,11 @@ class ConnectionViewFragmentTest {
     @Test
     fun `Launch ConnectionViewFragment with registered device, then register button is disabled`() {
         launchFragmentInHiltContainer<ConnectionViewFragment>(
-            fragmentArgs = bundleOf(
-                ConnectionViewModel.ARG_SMSN to smsn,
-                ConnectionViewModel.ARG_REGISTERED to true
-            )
+            fragmentArgs =
+                bundleOf(
+                    ConnectionViewModel.ARG_SMSN to smsn,
+                    ConnectionViewModel.ARG_REGISTERED to true,
+                ),
         ) {
             onView(withId(R.id.registerButton)).apply {
                 check(matches(isNotEnabled()))

@@ -25,88 +25,115 @@ import com.amazon.sidewalk.result.RegistrationDetail
 import com.amazon.sidewalk.result.SidewalkResult
 import com.amazon.sidewalk.sample.data.ScanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed class ScanUiState {
     object Idle : ScanUiState()
-    class Loading(val event: ScanEvent) : ScanUiState()
-    class Scanned(val devices: List<SidewalkDevice>) : ScanUiState()
-    class Registered(val registrationDetail: RegistrationDetail) : ScanUiState()
-    class Failure(val event: ScanEvent, val exception: Throwable?) : ScanUiState()
+
+    class Loading(
+        val event: ScanEvent,
+    ) : ScanUiState()
+
+    class Scanned(
+        val devices: List<SidewalkDevice>,
+    ) : ScanUiState()
+
+    class Registered(
+        val registrationDetail: RegistrationDetail,
+    ) : ScanUiState()
+
+    class Failure(
+        val event: ScanEvent,
+        val exception: Throwable?,
+    ) : ScanUiState()
 }
 
-sealed class ScanEvent(val message: String) {
+sealed class ScanEvent(
+    val message: String,
+) {
     object Scan : ScanEvent("Scan")
-    class Register(val smsn: String) : ScanEvent("Register")
+
+    class Register(
+        val smsn: String,
+    ) : ScanEvent("Register")
 }
 
 @HiltViewModel
-class ScanViewModel @Inject constructor(private val scanRepository: ScanRepository) : ViewModel() {
-    private val _uiState = MutableStateFlow<ScanUiState>(ScanUiState.Idle)
-    val uiState: StateFlow<ScanUiState> = _uiState.asStateFlow()
+class ScanViewModel
+    @Inject
+    constructor(
+        private val scanRepository: ScanRepository,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow<ScanUiState>(ScanUiState.Idle)
+        val uiState: StateFlow<ScanUiState> = _uiState.asStateFlow()
 
-    private val scanList = mutableListOf<SidewalkDevice>()
+        private val scanList = mutableListOf<SidewalkDevice>()
 
-    private var scanJob: Job? = null
-    private var registerJob: Job? = null
+        private var scanJob: Job? = null
+        private var registerJob: Job? = null
 
-    fun scan(force: Boolean = false) {
-        if (force) {
-            cancelScan()
-        }
-        scanJob = viewModelScope.launch {
-            // Reset scanning list first
-            scanList.clear()
-
-            _uiState.update {
-                ScanUiState.Loading(event = ScanEvent.Scan)
+        fun scan(force: Boolean = false) {
+            if (force) {
+                cancelScan()
             }
-            scanRepository.scan()
-                .collect { result ->
-                    val newUiState = when (result) {
-                        is SidewalkResult.Success -> {
-                            scanList.add(result.value)
-                            ScanUiState.Scanned(scanList)
-                        }
-                        is SidewalkResult.Failure ->
-                            ScanUiState.Failure(ScanEvent.Scan, result.exception)
+            scanJob =
+                viewModelScope.launch {
+                    // Reset scanning list first
+                    scanList.clear()
+
+                    _uiState.update {
+                        ScanUiState.Loading(event = ScanEvent.Scan)
                     }
+                    scanRepository
+                        .scan()
+                        .collect { result ->
+                            val newUiState =
+                                when (result) {
+                                    is SidewalkResult.Success -> {
+                                        scanList.add(result.value)
+                                        ScanUiState.Scanned(scanList)
+                                    }
+                                    is SidewalkResult.Failure ->
+                                        ScanUiState.Failure(ScanEvent.Scan, result.exception)
+                                }
+                            _uiState.update { newUiState }
+                        }
+                }
+        }
+
+        fun registerDevice(smsn: String) {
+            registerJob =
+                viewModelScope.launch {
+                    _uiState.update {
+                        ScanUiState.Loading(event = ScanEvent.Register(smsn))
+                    }
+                    val newUiState =
+                        when (
+                            val result = scanRepository.registerDevice(smsn)
+                        ) {
+                            is SidewalkResult.Success -> {
+                                ScanUiState.Registered(registrationDetail = result.value)
+                            }
+                            is SidewalkResult.Failure ->
+                                ScanUiState.Failure(ScanEvent.Register(smsn), result.exception)
+                        }
                     _uiState.update { newUiState }
                 }
         }
-    }
 
-    fun registerDevice(smsn: String) {
-        registerJob = viewModelScope.launch {
-            _uiState.update {
-                ScanUiState.Loading(event = ScanEvent.Register(smsn))
-            }
-            val newUiState = when (
-                val result = scanRepository.registerDevice(smsn)
-            ) {
-                is SidewalkResult.Success -> {
-                    ScanUiState.Registered(registrationDetail = result.value)
-                }
-                is SidewalkResult.Failure ->
-                    ScanUiState.Failure(ScanEvent.Register(smsn), result.exception)
-            }
-            _uiState.update { newUiState }
+        fun cancelScan() {
+            scanJob?.cancel()
+            scanJob = null
+        }
+
+        fun cancelRegisterDevice() {
+            registerJob?.cancel()
+            registerJob = null
         }
     }
-
-    fun cancelScan() {
-        scanJob?.cancel()
-        scanJob = null
-    }
-
-    fun cancelRegisterDevice() {
-        registerJob?.cancel()
-        registerJob = null
-    }
-}

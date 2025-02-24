@@ -23,112 +23,146 @@ import androidx.lifecycle.viewModelScope
 import com.amazon.sidewalk.result.SidewalkResult
 import com.amazon.sidewalk.sample.data.AccountSettingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed class AccountSettingUiState {
     object Idle : AccountSettingUiState()
-    class Loading(val event: AccountSettingEvent) : AccountSettingUiState()
-    class LwaToken(val token: String) : AccountSettingUiState()
+
+    class Loading(
+        val event: AccountSettingEvent,
+    ) : AccountSettingUiState()
+
+    class LwaToken(
+        val token: String,
+    ) : AccountSettingUiState()
+
     object LoggedIn : AccountSettingUiState()
+
     object LoggedOut : AccountSettingUiState()
-    class Deregistered(val smsn: String) : AccountSettingUiState()
-    class Failure(val event: AccountSettingEvent, val exception: Throwable?) : AccountSettingUiState()
+
+    class Deregistered(
+        val smsn: String,
+    ) : AccountSettingUiState()
+
+    class Failure(
+        val event: AccountSettingEvent,
+        val exception: Throwable?,
+    ) : AccountSettingUiState()
 }
 
-sealed class AccountSettingEvent(val message: String) {
+sealed class AccountSettingEvent(
+    val message: String,
+) {
     object RequestLwaToken : AccountSettingEvent("RequestLwaToken")
+
     object Login : AccountSettingEvent("Login")
+
     object Logout : AccountSettingEvent("Logout")
-    class Deregister(val smsn: String) : AccountSettingEvent("Deregister")
+
+    class Deregister(
+        val smsn: String,
+    ) : AccountSettingEvent("Deregister")
 }
 
 @HiltViewModel
-class AccountSettingViewModel @Inject constructor(
-    private val accountSettingRepository: AccountSettingRepository
-) : ViewModel() {
+class AccountSettingViewModel
+    @Inject
+    constructor(
+        private val accountSettingRepository: AccountSettingRepository,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow<AccountSettingUiState>(AccountSettingUiState.Idle)
+        val uiState: StateFlow<AccountSettingUiState> = _uiState.asStateFlow()
 
-    private val _uiState = MutableStateFlow<AccountSettingUiState>(AccountSettingUiState.Idle)
-    val uiState: StateFlow<AccountSettingUiState> = _uiState.asStateFlow()
+        init {
+            requestLwaToken()
+        }
 
-    init {
-        requestLwaToken()
-    }
+        private fun requestLwaToken(
+            retry: Int = 3,
+            delayMillis: Long = 200,
+        ) {
+            viewModelScope.launch {
+                val result = accountSettingRepository.requestLwaToken()
+                if (result is SidewalkResult.Failure && result.exception == null && retry > 0) {
+                    delay(delayMillis)
+                    requestLwaToken(retry - 1, delayMillis + 50)
+                    return@launch
+                }
 
-    private fun requestLwaToken(retry: Int = 3, delayMillis: Long = 200) {
-        viewModelScope.launch {
-            val result = accountSettingRepository.requestLwaToken()
-            if (result is SidewalkResult.Failure && result.exception == null && retry > 0) {
-                delay(delayMillis)
-                requestLwaToken(retry - 1, delayMillis + 50)
-                return@launch
+                val newUiState =
+                    when (result) {
+                        is SidewalkResult.Success -> AccountSettingUiState.LwaToken(result.value)
+                        is SidewalkResult.Failure ->
+                            AccountSettingUiState.Failure(
+                                AccountSettingEvent.RequestLwaToken,
+                                result.exception,
+                            )
+                    }
+                _uiState.update { newUiState }
             }
+        }
 
-            val newUiState = when (result) {
-                is SidewalkResult.Success -> AccountSettingUiState.LwaToken(result.value)
-                is SidewalkResult.Failure -> AccountSettingUiState.Failure(
-                    AccountSettingEvent.RequestLwaToken,
-                    result.exception
-                )
+        fun login() {
+            viewModelScope.launch {
+                val newUiState =
+                    when (val result = accountSettingRepository.login()) {
+                        is SidewalkResult.Success -> AccountSettingUiState.LoggedIn
+                        is SidewalkResult.Failure ->
+                            AccountSettingUiState.Failure(
+                                AccountSettingEvent.Login,
+                                result.exception,
+                            )
+                    }
+                _uiState.update { newUiState }
             }
-            _uiState.update { newUiState }
+        }
+
+        fun logout() {
+            viewModelScope.launch {
+                _uiState.update {
+                    AccountSettingUiState.Loading(event = AccountSettingEvent.Logout)
+                }
+                val newUiState =
+                    when (val result = accountSettingRepository.logout()) {
+                        is SidewalkResult.Success -> AccountSettingUiState.LoggedOut
+                        is SidewalkResult.Failure ->
+                            AccountSettingUiState.Failure(
+                                AccountSettingEvent.Logout,
+                                result.exception,
+                            )
+                    }
+                _uiState.update { newUiState }
+            }
+        }
+
+        fun deregisterDevice(smsn: String) {
+            viewModelScope.launch {
+                _uiState.update {
+                    AccountSettingUiState.Loading(event = AccountSettingEvent.Deregister(smsn))
+                }
+                val newUiState =
+                    when (
+                        val result = accountSettingRepository.deregisterDevice(smsn)
+                    ) {
+                        is SidewalkResult.Success -> AccountSettingUiState.Deregistered(smsn)
+                        is SidewalkResult.Failure ->
+                            AccountSettingUiState.Failure(
+                                AccountSettingEvent.Deregister(smsn),
+                                result.exception,
+                            )
+                    }
+                _uiState.update { newUiState }
+            }
+        }
+
+        override fun onCleared() {
+            accountSettingRepository.clear()
+            super.onCleared()
         }
     }
-
-    fun login() {
-        viewModelScope.launch {
-            val newUiState = when (val result = accountSettingRepository.login()) {
-                is SidewalkResult.Success -> AccountSettingUiState.LoggedIn
-                is SidewalkResult.Failure -> AccountSettingUiState.Failure(
-                    AccountSettingEvent.Login,
-                    result.exception
-                )
-            }
-            _uiState.update { newUiState }
-        }
-    }
-
-    fun logout() {
-        viewModelScope.launch {
-            _uiState.update {
-                AccountSettingUiState.Loading(event = AccountSettingEvent.Logout)
-            }
-            val newUiState = when (val result = accountSettingRepository.logout()) {
-                is SidewalkResult.Success -> AccountSettingUiState.LoggedOut
-                is SidewalkResult.Failure -> AccountSettingUiState.Failure(
-                    AccountSettingEvent.Logout,
-                    result.exception
-                )
-            }
-            _uiState.update { newUiState }
-        }
-    }
-
-    fun deregisterDevice(smsn: String) {
-        viewModelScope.launch {
-            _uiState.update {
-                AccountSettingUiState.Loading(event = AccountSettingEvent.Deregister(smsn))
-            }
-            val newUiState = when (
-                val result = accountSettingRepository.deregisterDevice(smsn)
-            ) {
-                is SidewalkResult.Success -> AccountSettingUiState.Deregistered(smsn)
-                is SidewalkResult.Failure -> AccountSettingUiState.Failure(
-                    AccountSettingEvent.Deregister(smsn),
-                    result.exception
-                )
-            }
-            _uiState.update { newUiState }
-        }
-    }
-
-    override fun onCleared() {
-        accountSettingRepository.clear()
-        super.onCleared()
-    }
-}

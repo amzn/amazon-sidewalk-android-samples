@@ -31,27 +31,25 @@ apply {
 }
 
 android {
-    compileSdk = 31
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.amazon.sidewalk.sample"
         minSdk = 23
-        targetSdk = 31
+        targetSdk = 34
         versionCode = 1
         versionName = "1.2.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        missingDimensionStrategy("log", "internal")
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     buildTypes {
@@ -82,75 +80,77 @@ android {
         val action = rootProject.ext["testOptions"] as TestOptions.() -> Unit
         action()
     }
+    namespace = "com.amazon.sidewalk.sample"
 }
 
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to "*.jar")))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.10")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.0.10")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
-    implementation("androidx.appcompat:appcompat:1.4.2")
+    implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
-    implementation("androidx.annotation:annotation:1.5.0")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.annotation:annotation:1.8.2")
     implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
-    implementation("com.google.android.material:material:1.6.1")
-    implementation("androidx.activity:activity-ktx:1.5.1")
-    implementation("androidx.fragment:fragment-ktx:1.5.3")
-    implementation("androidx.recyclerview:recyclerview:1.2.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.5")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.activity:activity-ktx:1.9.2")
+    implementation("androidx.fragment:fragment-ktx:1.8.3")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
 
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.8.0")
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // Nordic BLE libraries
     implementation("no.nordicsemi.android.support.v18:scanner:1.6.0")
-    implementation("no.nordicsemi.android:ble-ktx:2.3.1")
+    implementation("no.nordicsemi.android:ble-ktx:2.7.5")
 
     // Curve25519 and AES-CMAC
-    implementation("org.bouncycastle:bcprov-jdk15to18:1.72")
+    implementation("org.bouncycastle:bcprov-jdk15to18:1.78.1")
 
     // Amazon Sidewalk SDK
-    implementation("com.amazon.sidewalk:mobile-sdk:1.2.0")
+    implementation("com.amazon.sidewalk:mobile-sdk:1.3.0")
 
     // Hilt
-    implementation("com.google.dagger:hilt-android:2.44")
-    kapt("com.google.dagger:hilt-compiler:2.44")
-    implementation("androidx.hilt:hilt-navigation-fragment:1.0.0")
+    implementation("com.google.dagger:hilt-android:2.52")
+    kapt("com.google.dagger:hilt-compiler:2.52")
+    implementation("androidx.hilt:hilt-navigation-fragment:1.2.0")
 
     // Navigation Architecture Component-Kotlin
-    implementation("androidx.navigation:navigation-fragment-ktx:2.5.2")
-    implementation("androidx.navigation:navigation-ui-ktx:2.5.2")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
 
+    // Unit Testing
     testImplementation("junit:junit:4.13.2")
-    testImplementation("io.mockk:mockk:1.10.6")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:1.6.21")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.1")
+    testImplementation("io.mockk:mockk:1.13.12")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:2.0.10")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 
     // Hilt testing
-    testImplementation("com.google.dagger:hilt-android-testing:2.40.5")
-    kaptTest("com.google.dagger:hilt-android-compiler:2.40.5")
+    testImplementation("com.google.dagger:hilt-android-testing:2.52")
+    kaptTest("com.google.dagger:hilt-android-compiler:2.52")
 
     // To use the androidx.test.core APIs
-    testImplementation("androidx.test:core:1.4.0")
+    testImplementation("androidx.test:core:1.6.1")
     // Kotlin extensions for androidx.test.core
-    testImplementation("androidx.test:core-ktx:1.4.0")
+    testImplementation("androidx.test:core-ktx:1.6.1")
 
     // To use the androidx.test.espresso
-    testImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    testImplementation("androidx.test.espresso:espresso-core:3.6.1")
 
     // To use the JUnit Extension APIs
-    testImplementation("androidx.test.ext:junit:1.1.3")
+    testImplementation("androidx.test.ext:junit:1.2.1")
     // Kotlin extensions for androidx.test.ext.junit
-    testImplementation("androidx.test.ext:junit-ktx:1.1.3")
+    testImplementation("androidx.test.ext:junit-ktx:1.2.1")
 
     // To use the androidx.test.runner APIs
-    testImplementation("androidx.test:runner:1.4.0")
+    testImplementation("androidx.test:runner:1.6.2")
 
     // Navigation Testing
-    testImplementation("androidx.navigation:navigation-testing:2.5.2")
+    testImplementation("androidx.navigation:navigation-testing:2.7.7")
 
     // Robolectric
-    testImplementation("org.robolectric:robolectric:4.8")
+    testImplementation("org.robolectric:robolectric:4.13")
 }
